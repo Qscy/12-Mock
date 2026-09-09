@@ -1330,6 +1330,78 @@ def render_frontend(assets: AssetManager) -> str:
             .replace("<!--TAILWIND_STYLE-->", f"<style>{TAILWIND_CSS}</style>"))
 
 
+# Deliberately ES5-only: this page must still run in an old or embedded browser,
+# which is one of the reasons the Vue runtime can fail to load.
+DIAG_HTML = r'''<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>12 Mock 前端资源自检</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;padding:20px;background:#f8fafc;color:#0f172a}
+h1{font-size:15px;margin:0 0 6px}p{font-size:12px;color:#475569;margin:0 0 12px}
+pre{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:14px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;min-height:200px}
+button{margin-top:10px;padding:6px 14px;border-radius:5px;border:none;background:#3b82f6;color:#fff;font-size:12px;cursor:pointer}</style>
+</head><body>
+<h1>12 Mock 前端资源自检 / Frontend asset self-test</h1>
+<p>请把下面整段结果发回,即可定位是哪一环失败。</p>
+<pre id="out">running...</pre>
+<button onclick="location.reload()">重新检测 / Re-run</button>
+<script>
+(function () {
+  var ASSETS = /*ASSET_JSON*/;
+  var out = document.getElementById('out'), lines = [];
+  function log(s) { lines.push(s); out.textContent = lines.join('\n'); }
+  function get(url, cb) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('GET', url, true);
+      x.onreadystatechange = function () {
+        if (x.readyState !== 4) return;
+        cb(null, { status: x.status, type: x.getResponseHeader('Content-Type') || '', text: x.responseText || '' });
+      };
+      x.onerror = function () { cb('network error', null); };
+      x.send();
+    } catch (e) { cb(String(e), null); }
+  }
+  function parseCheck(text) {
+    try { new Function(text); return 'parse ok'; }
+    catch (e) { return 'PARSE ERROR: ' + (e && e.message ? e.message : e); }
+  }
+  var names = [], k;
+  for (k in ASSETS) { if (ASSETS.hasOwnProperty(k)) names.push(k); }
+  log('UA: ' + navigator.userAgent);
+  log('Vue before: ' + typeof window.Vue + ' | CodeMirror before: ' + typeof window.CodeMirror);
+  var i = 0;
+  function next() {
+    if (i >= names.length) { dynamicLoad(); return; }
+    var name = names[i++];
+    get(ASSETS[name], function (err, r) {
+      if (err) { log('FETCH FAIL ' + name + ' -> ' + err); next(); return; }
+      var pc = name.indexOf('.js') >= 0 ? parseCheck(r.text) : '-';
+      log(r.status + '  ' + r.type + '  ' + r.text.length + ' bytes  ' + name + '  [' + pc + ']');
+      if (name === 'vue.global.prod.js') log('    head: ' + r.text.substring(0, 60).replace(/\n/g, ' '));
+      next();
+    });
+  }
+  function dynamicLoad() {
+    var s = document.createElement('script'), done = false;
+    s.src = ASSETS['vue.global.prod.js'];
+    s.onload = function () { if (done) return; done = true; log('dynamic <script>: onload, typeof Vue = ' + typeof window.Vue); finish(); };
+    s.onerror = function () { if (done) return; done = true; log('dynamic <script>: ONERROR (blocked or refused)'); finish(); };
+    document.getElementsByTagName('head')[0].appendChild(s);
+    setTimeout(function () { if (done) return; done = true; log('dynamic <script>: TIMEOUT, typeof Vue = ' + typeof window.Vue); finish(); }, 8000);
+  }
+  function finish() {
+    log('Vue after: ' + typeof window.Vue);
+    log('--- 结束 / end ---');
+  }
+  next();
+})();
+</script></body></html>'''
+
+
+def render_diag(assets: AssetManager) -> str:
+    urls = {name: f"{assets.url_for(name)}?v={_asset_version(name)}" for name in ASSET_MANIFEST}
+    return DIAG_HTML.replace("/*ASSET_JSON*/", json.dumps(urls, ensure_ascii=False))
+
+
 TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
 
 FRONTEND_HTML = r'''<!DOCTYPE html>
@@ -1591,28 +1663,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 </div>
 </div>
 <script>
-(function(){
-// Guard: without the Vue runtime the rest of this script would throw and leave
-// a blank page. Show an actionable message instead.
-if (typeof Vue === 'undefined') {
-  document.getElementById('vue-missing').hidden = false;
-  const box = document.getElementById('vue-missing-urls');
-  const failed = window.__assetFailures || [];
-  if (box && failed.length) { box.textContent = failed.join('\n'); box.hidden = false; }
-  // Ask the server what it thinks, so it is obvious whether to blame the
-  // browser (stale cache, extension, proxy) or the server.
-  fetch('/_admin/assets').then(r => r.json()).then(d => {
-    const list = d.assets || [];
-    const ok = list.filter(a => a.vendored).length;
-    const el = document.getElementById('vue-missing-server');
-    if (!el) return;
-    el.textContent = (ok === list.length && list.length)
-      ? `服务端资源就绪（${ok}/${list.length}）。既然这里仍然失败，问题多半在浏览器：请按 Ctrl+F5 强制刷新，或用无痕窗口再试（缓存 / 插件 / 代理拦截）。`
-      : `服务端只缓存了 ${ok}/${list.length} 个资源，请检查服务器能否访问 jsDelivr / unpkg。`;
-    el.hidden = false;
-  }).catch(() => {});
-  return;
-}
+function startApp(){
 const{createApp,ref,reactive,computed,onMounted,onBeforeUnmount,watch,nextTick}=Vue;
 if (typeof CodeMirror !== 'undefined' && !CodeMirror.modes['json-hl']) {
   CodeMirror.defineMode('json-hl', function (config) {
@@ -1928,6 +1979,40 @@ login,logout,selRoute,parseBody,addResp,saveRoute,delRoute,doAddRoute,sendReq,do
 switchProject,doNewProj,issueJwt,verifyJwt,toggleJwt,loadJwtConfig,saveJwtConfig,
 loadUsers,doAddUser,doRemoveUser,doChgPw}
 }}).component('json-editor',_JE).mount('#app')
+}
+(function(){
+// Bootstrap. Vue normally arrives via the static <script> tag in <head>. If that
+// tag failed while the file itself is served fine (stale cache entry, extension,
+// proxy), retry once with a unique URL before showing the fallback message.
+var shown = false;
+function fail() {
+  if (shown) return; shown = true;
+  document.getElementById('vue-missing').hidden = false;
+  var box = document.getElementById('vue-missing-urls');
+  var failed = window.__assetFailures || [];
+  if (box && failed.length) { box.textContent = failed.join('\n'); box.hidden = false; }
+  // Ask the server what it thinks, so it is obvious whether to blame the
+  // browser (stale cache, extension, proxy) or the server.
+  fetch('/_admin/assets').then(function (r) { return r.json(); }).then(function (d) {
+    var list = d.assets || [];
+    var ok = list.filter(function (a) { return a.vendored; }).length;
+    var el = document.getElementById('vue-missing-server');
+    if (!el) return;
+    el.textContent = (ok === list.length && list.length)
+      ? '服务端资源就绪（' + ok + '/' + list.length + '）。既然这里仍然失败，问题多半在浏览器：请按 Ctrl+F5 强制刷新，或用无痕窗口再试（缓存 / 插件 / 代理拦截）。'
+      : '服务端只缓存了 ' + ok + '/' + list.length + ' 个资源，请检查服务器能否访问 jsDelivr / unpkg。';
+    el.hidden = false;
+  }).catch(function () {});
+}
+if (typeof Vue !== 'undefined') { startApp(); return; }
+var retry = document.createElement('script');
+retry.src = '/_admin/assets/vue.global.prod.js?_=' + Date.now();
+retry.onload = function () { if (typeof Vue !== 'undefined') { startApp(); } else { fail(); } };
+retry.onerror = fail;
+document.getElementsByTagName('head')[0].appendChild(retry);
+setTimeout(function () {
+  if (typeof Vue === 'undefined' && !document.querySelector('#app[data-v-app]')) fail();
+}, 10000);
 })();
 </script></body></html>'''
 
@@ -1966,6 +2051,12 @@ def create_app(config: AppConfig) -> FastAPI:
         # Never let a browser cache this shell: a stale copy could reference
         # assets from an older build.
         return HTMLResponse(content=render_frontend(assets),
+                            headers={"Cache-Control": "no-store, must-revalidate"})
+
+    @app.get("/_admin/diag", response_class=HTMLResponse)
+    async def frontend_diag():
+        """Browser-side self-test for the frontend assets (ES5 only, no deps)."""
+        return HTMLResponse(content=render_diag(assets),
                             headers={"Cache-Control": "no-store, must-revalidate"})
 
     @app.get("/_admin/assets/{name}")
