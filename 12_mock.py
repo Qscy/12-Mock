@@ -25,6 +25,11 @@ import jwt
 from faker import Faker
 import uvicorn
 
+# Identifies this exact server process (useful when several are running on one
+# machine, e.g. while debugging a stale page in a browser).
+INSTANCE_STARTED = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+INSTANCE_ID = f"{os.getpid()}@{INSTANCE_STARTED}"
+
 FAKE_ZH = Faker("zh_CN")
 FAKE_EN = Faker()
 
@@ -1486,7 +1491,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <pre id="vue-missing-urls" hidden style="margin:10px 0 0;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#b91c1c;white-space:pre-wrap;word-break:break-all"></pre>
 <div id="vue-missing-server" hidden style="margin-top:10px;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;color:#0f172a"></div>
 <div style="margin-top:12px;display:flex;gap:8px">
-<button onclick="location.reload()" style="padding:6px 14px;border-radius:5px;border:none;background:#3b82f6;color:#fff;font-size:12px;cursor:pointer">重新加载 / Reload</button>
+<button onclick="location.href='/?fresh='+Date.now()" style="padding:6px 14px;border-radius:5px;border:none;background:#3b82f6;color:#fff;font-size:12px;cursor:pointer">重新加载 / Reload</button>
 <button onclick="location.href='/_admin/assets'" style="padding:6px 14px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;cursor:pointer">查看资源状态 / Asset status</button>
 </div>
 </div></div>
@@ -2028,8 +2033,8 @@ function fail() {
     var el = document.getElementById('vue-missing-server');
     if (!el) return;
     el.textContent = (ok === list.length && list.length)
-      ? '服务端资源就绪（' + ok + '/' + list.length + '）。既然这里仍然失败，问题多半在浏览器：请按 Ctrl+F5 强制刷新，或用无痕窗口再试（缓存 / 插件 / 代理拦截）。'
-      : '服务端只缓存了 ' + ok + '/' + list.length + ' 个资源，请检查服务器能否访问 jsDelivr / unpkg。';
+      ? '服务端 #' + (d.instance || '?') + ' 资源就绪（' + ok + '/' + list.length + '）。既然这里仍然失败，问题多半在浏览器：请按 Ctrl+F5 强制刷新，或用无痕窗口再试（缓存 / 插件 / 代理拦截）。'
+      : '服务端 #' + (d.instance || '?') + ' 只缓存了 ' + ok + '/' + list.length + ' 个资源，请检查服务器能否访问 jsDelivr / unpkg。';
     el.hidden = false;
   }).catch(function () {});
 }
@@ -2076,11 +2081,14 @@ def create_app(config: AppConfig) -> FastAPI:
 
     # ---- Frontend shell & vendored assets (must stay reachable without auth) ----
     @app.get("/", response_class=HTMLResponse)
-    async def frontend():
-        # Never let a browser cache this shell: a stale copy could reference
-        # assets from an older build.
-        return HTMLResponse(content=render_frontend(assets),
-                            headers={"Cache-Control": "no-store, must-revalidate"})
+    async def frontend(request: Request):
+        headers = {"Cache-Control": "no-store, must-revalidate"}
+        # ?fresh=1 tells the browser to drop what it cached for this origin. That
+        # recovers a browser (or proxy) stuck serving a stale copy of the shell,
+        # which would otherwise never ask the server for the current page.
+        if request.query_params.get("fresh"):
+            headers["Clear-Site-Data"] = '"cache"'
+        return HTMLResponse(content=render_frontend(assets), headers=headers)
 
     @app.get("/_admin/diag", response_class=HTMLResponse)
     async def frontend_diag():
@@ -2107,7 +2115,10 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/_admin/assets")
     async def frontend_asset_status():
-        return {"assets": assets.status()}
+        # The instance marker lets a user (and support) tell exactly which server
+        # process answered, which matters when several are started on one machine.
+        return {"instance": INSTANCE_ID, "pid": os.getpid(), "started": INSTANCE_STARTED,
+                "assets": assets.status()}
 
     app.state.psm = psm
     app.state.assets = assets
