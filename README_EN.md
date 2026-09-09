@@ -242,13 +242,13 @@ Enable by modifying `global_config.json`:
 
 ## Frontend Assets & Offline Deployment
 
-The management UI needs Vue 3 and CodeMirror 5. They are resolved in this order, so **the first run caches them and everything works offline afterwards**:
+The management UI needs Vue 3 and CodeMirror 5. Every asset tag in the page points at **this server** (`/_admin/assets/<file>`), which decides how to serve it, so **the very first page load never depends on a CDN being fast or reachable**:
 
-| Order | Location | Purpose |
-|-------|----------|---------|
-| 1 | `<script dir>/vendor/` | Pre-seeded for air-gapped/intranet setups; wins over everything |
-| 2 | `<data dir>/vendor/` | Cache auto-filled on the first run |
-| 3 | Upstream CDN | Last resort, so a fresh clone still opens |
+| Order | Behaviour | Notes |
+|-------|-----------|-------|
+| 1 | Local cache | `<script dir>/vendor/` (pre-seeded, wins) or `<data dir>/vendor/` (auto-cached) |
+| 2 | Server-side fetch | Tries jsDelivr then unpkg and **only caches a response whose sha384 matches**; unverifiable bytes are discarded |
+| 3 | 302 to a mirror | If the server cannot fetch it, the browser is redirected to a mirror |
 
 - Tailwind CSS is **never fetched from a CDN**: it is compiled at build time from this file's own template and inlined into `12_mock.py`, so no CSS is compiled in the browser at runtime.
 - Offline install: drop these files into `<script dir>/vendor/` and no network is needed —
@@ -256,8 +256,8 @@ The management UI needs Vue 3 and CodeMirror 5. They are resolved in this order,
   `codemirror.matchbrackets.js`, `codemirror.foldcode.js`, `codemirror.foldgutter.js`,
   `codemirror.foldgutter.css`, `codemirror.brace-fold.js`, `codemirror.show-hint.js`,
   `codemirror.show-hint.css`
-- Check asset readiness with `GET /_admin/assets` (returns each asset's `vendored` flag and byte count).
-- If Vue still fails to load, the page shows an actionable message instead of a blank screen, and the Mock endpoints keep working.
+- Check asset readiness with `GET /_admin/assets` (per-asset `vendored` flag, mirrors and hash).
+- If an asset still fails to load, the page shows a diagnostic message and **lists the exact failing URL** instead of going blank, and the Mock endpoints keep working.
 
 ## License
 

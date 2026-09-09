@@ -240,13 +240,13 @@ mock_data/
 
 ## 前端资源与离线部署
 
-管理界面依赖 Vue 3 与 CodeMirror 5。这些资源按以下顺序解析，**首次运行会自动缓存，之后完全离线可用**：
+管理界面依赖 Vue 3 与 CodeMirror 5。页面中的资源标签**始终指向本服务**的 `/_admin/assets/<file>`，由服务端决定如何提供，因此**首次启动也不会因为 CDN 慢或不可达而白屏**：
 
-| 顺序 | 位置 | 说明 |
-|------|------|------|
-| 1 | `<脚本同级>/vendor/` | 内网/离线环境的预置目录，优先级最高 |
-| 2 | `<数据目录>/vendor/` | 首次运行自动下载并缓存的目录 |
-| 3 | 上游 CDN | 兜底，保证全新克隆也能直接打开 |
+| 顺序 | 处理方式 | 说明 |
+|------|----------|------|
+| 1 | 本地缓存 | `<脚本同级>/vendor/`（内网预置，优先）或 `<数据目录>/vendor/`（自动缓存） |
+| 2 | 服务端按需下载 | 依次尝试 jsDelivr / unpkg，**校验 sha384 后才写入缓存**；校验失败的响应一律丢弃 |
+| 3 | 302 跳转镜像 | 服务端下载失败时，让浏览器直接访问镜像 |
 
 - Tailwind CSS **不使用 CDN**：它的样式在构建期按本文件的模板预编译后内联进 `12_mock.py`，运行时不做任何 CSS 编译。
 - 离线部署：把下列文件放进 `<脚本同级>/vendor/` 即可，无需联网：
@@ -254,8 +254,8 @@ mock_data/
   `codemirror.matchbrackets.js`、`codemirror.foldcode.js`、`codemirror.foldgutter.js`、
   `codemirror.foldgutter.css`、`codemirror.brace-fold.js`、`codemirror.show-hint.js`、
   `codemirror.show-hint.css`
-- 资源就绪情况可通过 `GET /_admin/assets` 查询（返回每个资源的 `vendored` 状态与字节数）。
-- 即使 Vue 加载失败，页面也会显示明确的排查提示，而不会白屏；Mock 接口本身不受影响。
+- 资源就绪情况可通过 `GET /_admin/assets` 查询（返回每个资源的 `vendored` 状态、镜像列表与哈希）。
+- 万一资源仍加载失败，页面会显示排查提示并**列出具体失败的 URL**，而不会白屏；Mock 接口本身不受影响。
 
 ## License
 

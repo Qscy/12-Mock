@@ -7,6 +7,7 @@ APP_NAME = "12 Mock"
 # [1] IMPORTS & CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════
 import json, os, re, time, uuid, random, secrets, hashlib, tempfile, shutil, argparse, itertools, copy, asyncio
+import base64
 import threading
 import urllib.request
 from contextlib import asynccontextmanager
@@ -1114,52 +1115,59 @@ def create_management_api(app, storage, mockjs, logger, auth_mgr, jwt_managers, 
 # Tailwind is never fetched: its CSS is pre-compiled from this very template at
 # build time and inlined as TAILWIND_CSS, so nothing JIT-compiles CSS at runtime.
 
-CDN_CM = "https://cdn.jsdelivr.net/npm/codemirror@5.65.21"
+CM_PKG = "codemirror@5.65.21"
 
-ASSET_MANIFEST: Dict[str, Dict[str, str]] = {
+def _cm_urls(path: str) -> List[str]:
+    """jsDelivr first, then unpkg. Both serve byte-identical files, so a single
+    blocked CDN cannot defeat vendoring."""
+    return [f"https://cdn.jsdelivr.net/npm/{CM_PKG}/{path}",
+            f"https://unpkg.com/{CM_PKG}/{path}"]
+
+ASSET_MANIFEST: Dict[str, Dict[str, Any]] = {
     "vue.global.prod.js": {
-        "url": "https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js",
+        "urls": ["https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js",
+                 "https://cdn.jsdelivr.net/npm/vue@3.4.21/dist/vue.global.prod.js"],
         "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-6pS1WSZJY7wOk6qQTa9C9U2W1/qzqL7iYoMil7qn9KFeN5fZDAwIExgCd7U5AH+X",
     },
     "codemirror.css": {
-        "url": f"{CDN_CM}/lib/codemirror.css", "type": "text/css; charset=utf-8",
+        "urls": _cm_urls("lib/codemirror.css"), "type": "text/css; charset=utf-8",
         "sha384": "sha384-bsaAhvdduZPAwUb7RRLRvDgtEtOsggrgjkr/EjPO1i/vdoi+DmdLaG79UOt6M5hD",
     },
     "codemirror.show-hint.css": {
-        "url": f"{CDN_CM}/addon/hint/show-hint.css", "type": "text/css; charset=utf-8",
+        "urls": _cm_urls("addon/hint/show-hint.css"), "type": "text/css; charset=utf-8",
         "sha384": "sha384-kRjsHewXHC/tDWR5ARIYrr4L9IxbrrwQK6SDeJhyeC1zxtq7P9RYvyBp/H8lah6U",
     },
     "codemirror.foldgutter.css": {
-        "url": f"{CDN_CM}/addon/fold/foldgutter.css", "type": "text/css; charset=utf-8",
+        "urls": _cm_urls("addon/fold/foldgutter.css"), "type": "text/css; charset=utf-8",
         "sha384": "sha384-gW0T7WIPsj+5+b/qOsKxiwxdUCfZsjfGtzACaGGLdwEHq/pZ4aS5daCrQznA4Y8H",
     },
     "codemirror.js": {
-        "url": f"{CDN_CM}/lib/codemirror.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("lib/codemirror.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-YbR2n4zUtdAz2YuqQsJFpjrgTl5SPEm0NG+y8/y3R63tAWTA3O7TOyIWyYYcqUqU",
     },
     "codemirror.closebrackets.js": {
-        "url": f"{CDN_CM}/addon/edit/closebrackets.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/edit/closebrackets.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-pF/JiVjqZ1pMXmw6/3YCvu7PgYNcVJTxusZ7AuvTvSFR9iw74b85dWF5WYXeQ5t5",
     },
     "codemirror.matchbrackets.js": {
-        "url": f"{CDN_CM}/addon/edit/matchbrackets.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/edit/matchbrackets.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-BR0XTjTC3KMLHwZITuYVfySwKtsCtaKjnWj5Rk0rSQRWxnq1kO82+K8EKFmw/sW5",
     },
     "codemirror.foldcode.js": {
-        "url": f"{CDN_CM}/addon/fold/foldcode.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/fold/foldcode.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-CuXFmAVUOt4I7Pd2lbA7N/01JQ8nPHBjG3RD8XQEA7GliZKXWgHCKoGdgdYV23JU",
     },
     "codemirror.foldgutter.js": {
-        "url": f"{CDN_CM}/addon/fold/foldgutter.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/fold/foldgutter.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-RGh7YF44e45iAIqueURleEQC7RHvpzMUdpU+fqiIsbOOJdgupIf+287BbM1za4vJ",
     },
     "codemirror.brace-fold.js": {
-        "url": f"{CDN_CM}/addon/fold/brace-fold.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/fold/brace-fold.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-Gk9oy57aJ1GhL9olRThY4/vt43s3ITCd6Z8IW0fG1YMs41LbcmCQOmmvIhk17m7p",
     },
     "codemirror.show-hint.js": {
-        "url": f"{CDN_CM}/addon/hint/show-hint.js", "type": "application/javascript; charset=utf-8",
+        "urls": _cm_urls("addon/hint/show-hint.js"), "type": "application/javascript; charset=utf-8",
         "sha384": "sha384-hgYcouq6Guwa7Sq//tR+C0EUWtpH99eqSERq/pRCZhI/PFlxofIegzbImONYC8S1",
     },
 }
@@ -1179,6 +1187,13 @@ class AssetManager:
         self.data_dir = Path(data_dir)
         self.search_dirs = [Path(script_dir) / "vendor", self.data_dir / "vendor"]
         self._lock = threading.Lock()
+        self._locks: Dict[str, threading.Lock] = {}
+        self._warm_thread: Optional[threading.Thread] = None
+        self._last_attempt = 0.0
+
+    def _lock_for(self, name: str) -> threading.Lock:
+        with self._lock:
+            return self._locks.setdefault(name, threading.Lock())
 
     def local_path(self, name: str) -> Optional[Path]:
         """Return the on-disk path of a vendored asset, or None. Also guards traversal."""
@@ -1193,35 +1208,58 @@ class AssetManager:
                 continue
         return None
 
+    def ready(self) -> bool:
+        return all(self.local_path(n) for n in ASSET_MANIFEST)
+
     def url_for(self, name: str) -> str:
-        """Same-origin URL when vendored, otherwise the upstream CDN URL."""
-        return f"/_admin/assets/{name}" if self.local_path(name) else ASSET_MANIFEST[name]["url"]
+        """Always same-origin: /_admin/assets/{name} serves the cached copy, fetches
+        it on demand, or redirects to a CDN mirror. This keeps the page independent
+        of whether the background prefetch has finished yet."""
+        return f"/_admin/assets/{name}"
 
     def content_type(self, name: str) -> str:
         return ASSET_MANIFEST[name]["type"]
 
+    def cdn_url(self, name: str) -> str:
+        return ASSET_MANIFEST[name]["urls"][0]
+
     def download(self, name: str, timeout: int = 20) -> bool:
-        """Fetch one asset into <data_dir>/vendor, atomically. Never raises."""
-        if name not in ASSET_MANIFEST or self.local_path(name):
+        """Fetch one asset from the first mirror whose bytes match the recorded
+        hash. A response we cannot verify is never installed. Never raises."""
+        if name not in ASSET_MANIFEST:
+            return False
+        if self.local_path(name):
             return True
-        with self._lock:
+        with self._lock_for(name):
             if self.local_path(name):
                 return True
-            dest_dir = self.data_dir / "vendor"
-            try:
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                req = urllib.request.Request(ASSET_MANIFEST[name]["url"],
-                                             headers={"User-Agent": f"{APP_NAME}/{__version__}"})
-                with urllib.request.urlopen(req, timeout=timeout) as resp:
-                    data = resp.read()
+            meta = ASSET_MANIFEST[name]
+            want = meta["sha384"]
+            for url in meta["urls"]:
+                try:
+                    req = urllib.request.Request(url, headers={"User-Agent": f"{APP_NAME}/{__version__}"})
+                    with urllib.request.urlopen(req, timeout=timeout) as resp:
+                        data = resp.read()
+                except Exception as exc:
+                    print(f"[assets] {name}: {url} failed ({exc})")
+                    continue
                 if not data:
+                    continue
+                got = "sha384-" + base64.b64encode(hashlib.sha384(data).digest()).decode()
+                if got != want:
+                    print(f"[assets] {name}: {url} hash mismatch, rejected")
+                    continue
+                try:
+                    dest_dir = self.data_dir / "vendor"
+                    dest_dir.mkdir(parents=True, exist_ok=True)
+                    tmp = dest_dir / (name + ".tmp")
+                    tmp.write_bytes(data)
+                    os.replace(tmp, dest_dir / name)
+                    return True
+                except OSError as exc:
+                    print(f"[assets] {name}: cannot write cache ({exc})")
                     return False
-                tmp = dest_dir / (name + ".tmp")
-                tmp.write_bytes(data)
-                os.replace(tmp, dest_dir / name)
-                return True
-            except Exception:
-                return False
+            return False
 
     def warm(self) -> None:
         """Best-effort fetch of every missing asset; gives up after the first failure."""
@@ -1229,28 +1267,47 @@ class AssetManager:
             if not self.local_path(name) and not self.download(name):
                 return
 
-    def start_warm(self) -> None:
-        threading.Thread(target=self.warm, daemon=True).start()
+    def start_warm(self, min_interval: float = 60.0) -> None:
+        """Start a background fetch unless one is running or one just failed."""
+        with self._lock:
+            if self._warm_thread is not None and self._warm_thread.is_alive():
+                return
+            now = time.time()
+            if now - self._last_attempt < min_interval:
+                return
+            self._last_attempt = now
+            self._warm_thread = threading.Thread(target=self.warm, daemon=True)
+            self._warm_thread.start()
+
+    def ensure_ready(self, timeout: float = 25.0) -> None:
+        """Block until the background fetch settles, so the first page render
+        never points the browser at a CDN that may be unreachable."""
+        t = self._warm_thread
+        if t is not None:
+            t.join(timeout)
 
     def status(self) -> List[dict]:
         out = []
         for name, meta in ASSET_MANIFEST.items():
             p = self.local_path(name)
             out.append({"name": name, "vendored": bool(p),
-                        "bytes": p.stat().st_size if p else 0, "cdn": meta["url"]})
+                        "bytes": p.stat().st_size if p else 0,
+                        "mirrors": meta["urls"], "sha384": meta["sha384"]})
         return out
 
 
 def _asset_tag(assets: AssetManager, name: str) -> str:
-    """Render one <script>/<link> tag, adding SRI only when we point at a CDN."""
+    """Render one <script>/<link> tag.
+
+    The URL is always same-origin; /_admin/assets/{name} decides whether to serve
+    the cached file, fetch it, or redirect to a CDN mirror. No SRI: a
+    proxy-rewritten CDN response would otherwise block the script and leave a
+    blank page. The cached copy is hash-validated when it is downloaded instead.
+    """
     url = assets.url_for(name)
-    is_css = name.endswith(".css")
-    if url.startswith("/"):  # served by this server: same-origin, SRI unnecessary
-        return (f'<link rel="stylesheet" href="{url}">' if is_css
-                else f'<script src="{url}"></script>')
-    sri = f' integrity="{ASSET_MANIFEST[name]["sha384"]}" crossorigin="anonymous"'
-    return (f'<link rel="stylesheet" href="{url}"{sri}>' if is_css
-            else f'<script src="{url}"{sri}></script>')
+    if name.endswith(".css"):
+        return f'<link rel="stylesheet" href="{url}" onerror="__assetErr&&__assetErr(this.href)">'
+    return f'<script src="{url}" onerror="__assetErr&&__assetErr(this.src)"></script>'
 
 
 def build_asset_tags(assets: AssetManager) -> str:
@@ -1271,6 +1328,7 @@ TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-
 FRONTEND_HTML = r'''<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>12 Mock - One To Mock</title>
+<script>window.__assetFailures=[];window.__assetErr=function(u){window.__assetFailures.push(u);};</script>
 <!--ASSET_TAGS-->
 <style>
 [v-cloak]{display:none}body{margin:0;font-family:system-ui,sans-serif;background:#f1f5f9}
@@ -1317,6 +1375,7 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 Vue 3 未能加载，管理界面无法启动。<br>
 请检查网络，或把 <code>vue.global.prod.js</code> 等前端资源放入 <code>&lt;data_dir&gt;/vendor/</code>（或脚本同级的 <code>vendor/</code>）后刷新页面。<br>
 <span style="color:#64748b">Mock 接口本身不受影响：各项目端口上的路由仍可正常调用。</span>
+<pre id="vue-missing-urls" hidden style="margin:10px 0 0;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#b91c1c;white-space:pre-wrap;word-break:break-all"></pre>
 </div></div>
 <div id="app" v-cloak>
 <!-- Transient feedback for async actions -->
@@ -1523,7 +1582,13 @@ Vue 3 未能加载，管理界面无法启动。<br>
 (function(){
 // Guard: without the Vue runtime the rest of this script would throw and leave
 // a blank page. Show an actionable message instead.
-if (typeof Vue === 'undefined') { document.getElementById('vue-missing').hidden = false; return; }
+if (typeof Vue === 'undefined') {
+  document.getElementById('vue-missing').hidden = false;
+  const box = document.getElementById('vue-missing-urls');
+  const failed = window.__assetFailures || [];
+  if (box && failed.length) { box.textContent = failed.join('\n'); box.hidden = false; }
+  return;
+}
 const{createApp,ref,reactive,computed,onMounted,onBeforeUnmount,watch,nextTick}=Vue;
 if (typeof CodeMirror !== 'undefined' && !CodeMirror.modes['json-hl']) {
   CodeMirror.defineMode('json-hl', function (config) {
@@ -1878,9 +1943,18 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/_admin/assets/{name}")
     async def frontend_asset(name: str):
+        if name not in ASSET_MANIFEST:
+            raise HTTPException(404, "Unknown asset")
         path = assets.local_path(name)
         if path is None:
-            raise HTTPException(404, "Asset is not vendored")
+            # Not cached yet: fetch it here rather than making the browser depend
+            # on a CDN. The background prefetch is usually already done.
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, assets.download, name)
+            path = assets.local_path(name)
+        if path is None:
+            # Last resort: let the browser try a mirror directly.
+            return RedirectResponse(assets.cdn_url(name), status_code=302)
         return Response(content=path.read_bytes(), media_type=assets.content_type(name),
                         headers={"Cache-Control": "public, max-age=86400"})
 
