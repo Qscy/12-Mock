@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Runtime data (projects, audit logs, vendored assets cache)
+mock_data/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
