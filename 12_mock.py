@@ -914,8 +914,9 @@ def create_management_api(app, storage, mockjs, logger, auth_mgr, jwt_managers, 
     # ---- Projects ----
     @app.get("/_admin/projects")
     async def list_projects(ctx: dict = Depends(require_auth)):
-        gc = storage.get_global_config()
-        return {"projects": storage.list_projects_with_ports(), "active": gc.get("active_project","")}
+        # _ap() self-heals a missing/stale active_project, so the UI never builds
+        # URLs like /_admin/projects//logs.
+        return {"projects": storage.list_projects_with_ports(), "active": _ap()}
 
     @app.post("/_admin/projects")
     async def create_project(body: ProjectCreate, ctx: dict = Depends(require_auth)):
@@ -1265,7 +1266,7 @@ def render_frontend(assets: AssetManager) -> str:
             .replace("<!--TAILWIND_STYLE-->", f"<style>{TAILWIND_CSS}</style>"))
 
 
-TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
+TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
 
 FRONTEND_HTML = r'''<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1298,6 +1299,14 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 .CodeMirror .cm-bracket{color:#64748b}
 .CodeMirror .cm-matchingBracket{background-color:rgba(59,130,246,.18);outline:1px solid #3b82f6;color:inherit!important}
 .CodeMirror .cm-nonmatchingBracket{color:#dc2626!important}
+/* Button feedback: a disabled button is a running action — show a spinner. */
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn:disabled::before{content:'';display:inline-block;width:9px;height:9px;margin-right:5px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:spin .6s linear infinite;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+#toasts{position:fixed;right:16px;bottom:16px;z-index:9998;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none}
+.toast-item{background:#111827;color:#fff;padding:7px 12px;border-radius:6px;font-size:12px;box-shadow:0 6px 18px rgba(15,23,42,.18);max-width:320px;animation:toastin .18s ease-out}
+.toast-item.ok{background:#16a34a}.toast-item.err{background:#dc2626}
+@keyframes toastin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 </style>
 <!--TAILWIND_STYLE--></head><body>
 <noscript><div style="padding:24px;font-family:system-ui,sans-serif;font-size:13px">This admin UI requires JavaScript.</div></noscript>
@@ -1310,6 +1319,8 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <span style="color:#64748b">Mock 接口本身不受影响：各项目端口上的路由仍可正常调用。</span>
 </div></div>
 <div id="app" v-cloak>
+<!-- Transient feedback for async actions -->
+<div id="toasts"><div v-for="m in toasts" :key="m.id" class="toast-item" :class="m.kind">{{m.text}}</div></div>
 <!-- First-run Admin Setup Dialog (top-level: must render on the login screen too) -->
 <div v-if="showSetup" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
 <div class="card p-6 w-80 space-y-3"><h3 class="font-bold text-sm">{{t('setupAdmin')}}</h3>
@@ -1318,7 +1329,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <input class="ipt" type="password" v-model="sf.p" :placeholder="t('password')" @keyup.enter="doSetup">
 <input class="ipt" type="password" v-model="sf.p2" :placeholder="t('confirmPw')" @keyup.enter="doSetup">
 <div v-if="sf.e" class="text-red-500 text-xs">{{sf.e}}</div>
-<button class="btn bp w-full" @click="doSetup">{{t('createAdmin')}}</button></div></div>
+<button class="btn bp w-full" :disabled="pending.setup" @click="run('setup',doSetup)">{{t('createAdmin')}}</button></div></div>
 <!-- Login -->
 <div v-if="authOn&&!token&&!showSetup" class="min-h-screen flex items-center justify-center">
 <div class="card p-8 w-80"><h2 class="text-lg font-bold text-center mb-1">12 Mock</h2>
@@ -1327,7 +1338,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <input class="ipt" v-model="lf.u" :placeholder="t('username')" @keyup.enter="login">
 <input class="ipt" type="password" v-model="lf.p" :placeholder="t('password')" @keyup.enter="login">
 <div v-if="lf.e" class="text-red-500 text-xs">{{lf.e}}</div>
-<button class="btn bp w-full" @click="login">{{t('login')}}</button>
+<button class="btn bp w-full" :disabled="pending.login" @click="run('login',login)">{{t('login')}}</button>
 </div>
 <div class="mt-4 text-center"><button class="text-xs text-gray-400 hover:text-gray-600" @click="toggleLang">{{langToggle}}</button></div>
 </div></div>
@@ -1344,7 +1355,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <button class="btn bo" @click="showLog=!showLog">{{t('logs')}}</button>
 <button class="btn bo" @click="toggleJwt">JWT</button>
 <button class="btn bo" @click="toggleSettings">⚙ {{t('settings')}}</button>
-<button v-if="isAdmin" class="btn bo" @click="loadUsers();showUsers=true">{{t('users')}}</button>
+<button v-if="isAdmin" class="btn bo" :disabled="pending.users" @click="run('users',openUsers)">{{t('users')}}</button>
 <button class="text-xs text-gray-400 hover:text-gray-600 px-1" @click="toggleLang">{{langToggle}}</button>
 <span v-if="authOn" class="text-gray-400">{{cu}}<span v-if="isAdmin" class="text-blue-500 ml-1">[Admin]</span></span>
 <button v-if="authOn" class="btn bo" @click="logout">{{t('logout')}}</button>
@@ -1368,9 +1379,9 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <select class="ipt w-24 text-xs font-bold" v-model="ef.method">
 <option v-for="m in methods" :value="m">{{m}}</option></select>
 <input class="ipt flex-1 text-xs font-mono" v-model="ef.path">
-<button class="btn bp" @click="sendReq">Send</button>
-<button class="btn bo" @click="saveRoute">{{t('save')}}</button>
-<button class="btn bd text-xs" @click="delRoute">{{t('delete')}}</button></div>
+<button class="btn bp" :disabled="pending.send" @click="run('send',sendReq)">Send</button>
+<button class="btn bo" :disabled="pending.save" @click="run('save',saveRoute)">{{t('save')}}</button>
+<button class="btn bd text-xs" :disabled="pending.del" @click="run('del',delRoute)">{{t('delete')}}</button></div>
 <div class="flex border-b bg-white">
 <div class="tab" :class="{act:mt==='resp'}" @click="mt='resp'">{{t('responses')}}</div>
 <div class="tab" :class="{act:mt==='intc'}" @click="mt='intc'">{{t('intercept')}}</div>
@@ -1409,7 +1420,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <select class="ipt w-24" v-model="test.method"><option v-for="m in methods" :value="m">{{m}}</option></select>
 <span class="host-badge">{{projectHost}}</span>
 <input class="ipt flex-1 font-mono" v-model="test.url" placeholder="/api/path">
-<button class="btn bp" @click="doTest">Send</button></div>
+<button class="btn bp" :disabled="pending.send" @click="run('send',sendReq)">Send</button></div>
 <div class="flex gap-2 mb-2">
 <input class="ipt flex-1 font-mono text-xs" v-model="test.token" :placeholder="t('testToken')">
 <button class="btn bo text-xs" @click="test.token=jwt.result?jwt.result.token:test.token">{{t('useIssued')}}</button></div>
@@ -1425,7 +1436,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <!-- Log Panel -->
 <div v-if="showLog" class="border-t bg-white h-52 flex flex-col">
 <div class="px-3 py-1 border-b flex justify-between items-center text-xs font-semibold">
-{{t('auditLogs')}} <button class="btn bo text-xs" @click="loadLogs">{{t('refresh')}}</button></div>
+{{t('auditLogs')}} <button class="btn bo text-xs" :disabled="pending.logs" @click="run('logs',loadLogs)">{{t('refresh')}}</button></div>
 <div class="flex-1 overflow-y-auto p-2">
 <table class="w-full text-xs"><tr v-for="(l,i) in logs" :key="i" class="border-b border-gray-50">
 <td class="py-1 px-2 text-gray-400">{{fmtTs(l.ts)}}</td>
@@ -1452,21 +1463,21 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <button class="btn bo text-xs" @click="jwtSecretVis=!jwtSecretVis">{{jwtSecretVis?t('hide'):t('show')}}</button></div></div>
 <div><label class="text-xs text-gray-500">{{t('expireMin')}}</label>
 <input type="number" class="ipt" v-model.number="jwt.expMinutes" min="1"></div>
-<button class="btn bp w-full" @click="saveJwtConfig">{{t('saveConfig')}}</button>
+<button class="btn bp w-full" :disabled="pending.jwtCfg" @click="run('jwtCfg',saveJwtConfig)">{{t('saveConfig')}}</button>
 <div v-if="jwt.cfgMsg" class="text-xs" :class="jwt.cfgOk?'text-green-600':'text-red-600'">{{jwt.cfgMsg}}</div>
 </div><hr class="my-2">
 <div class="text-xs font-semibold text-gray-600">{{t('issueToken')}}</div>
 <div><label class="text-xs text-gray-500">Subject</label><input class="ipt" v-model="jwt.sub"></div>
 <div><label class="text-xs text-gray-500">Extra Claims (JSON)</label>
 <json-editor v-model="jwt.extra"></json-editor></div>
-<button class="btn bp w-full" @click="issueJwt">{{t('issueToken')}}</button>
+<button class="btn bp w-full" :disabled="pending.jwtIssue" @click="run('jwtIssue',issueJwt)">{{t('issueToken')}}</button>
 <div v-if="jwt.result" class="text-xs bg-gray-50 p-2 rounded break-all">
 <div class="font-semibold mb-1">Token:</div>{{jwt.result.token}}
 <div class="mt-1 text-gray-400">{{t('expires')}}: {{jwt.result.expire_at}}</div></div>
 <hr class="my-2">
 <div><label class="text-xs text-gray-500">{{t('verifyToken')}}</label>
 <textarea class="ipt" v-model="jwt.verify" rows="2"></textarea></div>
-<button class="btn bo w-full" @click="verifyJwt">{{t('verify')}}</button>
+<button class="btn bo w-full" :disabled="pending.jwtVerify" @click="run('jwtVerify',verifyJwt)">{{t('verify')}}</button>
 <div v-if="jwt.vresult" class="text-xs" :class="jwt.vresult.valid?'text-green-600':'text-red-600'">{{JSON.stringify(jwt.vresult)}}</div>
 </div></div>
 <!-- Add Route Dialog -->
@@ -1475,13 +1486,13 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <div class="flex gap-2"><select class="ipt w-24" v-model="nf.method">
 <option v-for="m in methods" :value="m">{{m}}</option></select>
 <input class="ipt" v-model="nf.path" placeholder="/api/path"></div>
-<div class="flex gap-2"><button class="btn bp flex-1" @click="doAddRoute">{{t('add')}}</button>
+<div class="flex gap-2"><button class="btn bp flex-1" :disabled="pending.addRoute" @click="run('addRoute',doAddRoute)">{{t('add')}}</button>
 <button class="btn bo flex-1" @click="showAdd=false">{{t('cancel')}}</button></div></div></div>
 <!-- New Project Dialog -->
 <div v-if="showNewProj" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showNewProj=false">
 <div class="card p-6 w-80 space-y-3"><h3 class="font-bold text-sm">{{t('newProject')}}</h3>
 <input class="ipt" v-model="newProjName" :placeholder="t('projectName')" @keyup.enter="doNewProj">
-<div class="flex gap-2"><button class="btn bp flex-1" @click="doNewProj">{{t('create')}}</button>
+<div class="flex gap-2"><button class="btn bp flex-1" :disabled="pending.newProj" @click="run('newProj',doNewProj)">{{t('create')}}</button>
 <button class="btn bo flex-1" @click="showNewProj=false">{{t('cancel')}}</button></div></div></div>
 <!-- User Management Dialog -->
 <div v-if="showUsers" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showUsers=false">
@@ -1491,19 +1502,19 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <td class="py-1.5">{{u.username}}</td>
 <td class="py-1.5"><span v-if="u.is_admin" class="text-blue-600 font-semibold">Admin</span><span v-else class="text-gray-400">User</span></td>
 <td class="py-1.5 text-right"><button class="btn bo text-xs mr-1" @click="chgPwUser=u.username;showChgPw=true">{{t('chgPw')}}</button>
-<button class="btn bd text-xs" @click="doRemoveUser(u.username)">{{t('delete')}}</button></td></tr></tbody></table>
+<button class="btn bd text-xs" :disabled="pending.delUser" @click="run('delUser',()=>doRemoveUser(u.username))">{{t('delete')}}</button></td></tr></tbody></table>
 <hr class="my-2">
 <div class="text-xs font-semibold">{{t('addUser')}}</div>
 <div class="flex gap-2">
 <input class="ipt flex-1" v-model="nu.username" :placeholder="t('username')">
 <input class="ipt flex-1" type="password" v-model="nu.password" :placeholder="t('password')"></div>
 <label class="flex items-center gap-1 text-xs"><input type="checkbox" v-model="nu.is_admin"> {{t('setAdmin')}}</label>
-<button class="btn bp w-full" @click="doAddUser">{{t('addUser')}}</button>
+<button class="btn bp w-full" :disabled="pending.addUser" @click="run('addUser',doAddUser)">{{t('addUser')}}</button>
 <!-- Change Password Sub-dialog -->
 <div v-if="showChgPw" class="fixed inset-0 bg-black/30 flex items-center justify-center z-[60]" @click.self="showChgPw=false">
 <div class="card p-6 w-72 space-y-3"><h3 class="font-bold text-sm">{{t('chgPw')}}: {{chgPwUser}}</h3>
 <input class="ipt" type="password" v-model="chgPwNew" :placeholder="t('newPw')">
-<div class="flex gap-2"><button class="btn bp flex-1" @click="doChgPw">{{t('save')}}</button>
+<div class="flex gap-2"><button class="btn bp flex-1" :disabled="pending.chgPw" @click="run('chgPw',doChgPw)">{{t('save')}}</button>
 <button class="btn bo flex-1" @click="showChgPw=false">{{t('cancel')}}</button></div></div></div>
 </div></div>
 </div>
@@ -1637,7 +1648,8 @@ newProject:'新建项目',projectName:'项目名称',create:'创建',userMgmt:'�
 chgPw:'改密码',addUser:'添加用户',setAdmin:'设为管理员',newPw:'新密码',
 settings:'设置',enableAuth:'启用认证',sessionExpire:'会话有效期（分钟）',close:'关闭',
 setupAdmin:'初始化管理员',setupAdminHint:'首次启用认证且尚无管理员，请创建管理员账号',confirmPw:'确认密码',createAdmin:'创建管理员',
-testToken:'测试 Token（可选，JWT 保护路由用）',useIssued:'使用已签发',testBody:'请求体（可选，JSON）'},
+testToken:'测试 Token（可选，JWT 保护路由用）',useIssued:'使用已签发',testBody:'请求体（可选，JSON）',
+saved:'已保存',deleted:'已删除',added:'已添加',created:'已创建',refreshed:'已刷新',issued:'已签发',reqFailed:'请求失败'},
 en:{username:'Username',password:'Password',login:'Login',logout:'Logout',project:'Project',logs:'Logs',users:'Users',
 search:'Search...',noRoutes:'No routes',addRoute:'Add Route',save:'Save',delete:'Delete',responses:'Responses',
 intercept:'Intercept',redirect:'Redirect',test:'Test',sequential:'Sequential',random:'Random',protected:'Protected',
@@ -1649,7 +1661,8 @@ newProject:'New Project',projectName:'Project name',create:'Create',userMgmt:'Us
 chgPw:'Password',addUser:'Add User',setAdmin:'Set as Admin',newPw:'New Password',
 settings:'Settings',enableAuth:'Enable Authentication',sessionExpire:'Session Expire (minutes)',close:'Close',
 setupAdmin:'Create Admin',setupAdminHint:'Auth was just enabled and no admin exists yet — create the first admin account',confirmPw:'Confirm Password',createAdmin:'Create Admin',
-testToken:'Test Token (optional, for JWT-protected routes)',useIssued:'Use Issued',testBody:'Request body (optional, JSON)'}};
+testToken:'Test Token (optional, for JWT-protected routes)',useIssued:'Use Issued',testBody:'Request body (optional, JSON)',
+saved:'Saved',deleted:'Deleted',added:'Added',created:'Created',refreshed:'Refreshed',issued:'Issued',reqFailed:'Request failed'}};
 const _app=createApp({setup(){
 const lang=ref(localStorage.getItem('mock_lang')||'zh');
 function t(k){return I18N[lang.value]?.[k]||I18N.zh[k]||k}
@@ -1672,14 +1685,33 @@ const showSettings=ref(false),showSetup=ref(false);
 const cfg=reactive({enabled:false,sessionExpire:480,msg:'',ok:false});
 const sf=reactive({u:'',p:'',p2:'',e:''});
 const projectHost=computed(()=>{const p=projects.value.find(x=>x.name===ap.value);return p&&p.port?'localhost:'+p.port:'localhost'});
+// ---- button feedback: transient toasts + per-action pending flags ----------
+const toasts=ref([]);
+let toastId=0;
+function toast(text,kind='ok',ms=2400){
+const id=++toastId;
+toasts.value.push({id,text,kind});
+setTimeout(()=>{toasts.value=toasts.value.filter(x=>x.id!==id)},ms)}
+const pending=reactive({});
+async function run(key,fn){
+if(pending[key])return;
+pending[key]=true;
+try{return await fn()}
+catch(e){toast((e&&e.message)?e.message:String(e),'err')}
+finally{pending[key]=false}}
+function openUsers(){showUsers.value=true;return loadUsers()}
 function h(){return token.value?{'Authorization':'Bearer '+token.value}:{}}
 async function api(path,opts={}){
 const init={...opts,headers:{...(opts.headers||{}),...h()}};
 if(init.body!=null&&init.body!=='')init.headers['Content-Type']=init.headers['Content-Type']||'application/json';
-const r=await fetch(path,init);
+let r;
+try{r=await fetch(path,init)}
+catch(e){toast(t('reqFailed')+': '+e.message,'err');return null}
 if(r.status===401&&authOn.value){token.value='';localStorage.removeItem('mock_token');location.reload();return}
-if(r.status===403){const d=await r.json().catch(()=>({}));alert(d.detail||'Admin only');return}
-return r.json()}
+let data=null;
+try{data=await r.json()}catch(e){data=null}
+if(!r.ok&&r.status!==401)toast((data&&data.detail)||('HTTP '+r.status),'err');
+return data}
 onMounted(async()=>{
 const s=await fetch('/_admin/auth/status').then(r=>r.json());
 authOn.value=s.enabled;
@@ -1716,14 +1748,14 @@ async function saveRoute(){
 const def={...ef.def};def.responses=def.responses.map(r=>{const{_bodyText,...clean}=r;return clean});
 const ic={...def.intercept};try{ic.body=JSON.parse(ic._bodyText)}catch{};delete ic._bodyText;def.intercept=ic;
 await api('/_admin/projects/'+ap.value+'/routes',{method:'PUT',body:JSON.stringify({path:ef.path,method:ef.method.toLowerCase(),definition:def})});
-await loadRoutes()}
+await loadRoutes();toast(t('saved'))}
 async function delRoute(){
 if(!confirm(t('delete')+'?'))return;
 await api('/_admin/projects/'+ap.value+'/routes',{method:'DELETE',body:JSON.stringify({path:sr.value.path,method:sr.value.method.toLowerCase()})});
-sr.value=null;await loadRoutes()}
+sr.value=null;await loadRoutes();toast(t('deleted'))}
 async function doAddRoute(){
 await api('/_admin/projects/'+ap.value+'/routes',{method:'POST',body:JSON.stringify({path:nf.path,method:nf.method.toLowerCase(),definition:{responses:[{name:'default',status:200,body:{message:'Hello'},headers:{},delay:0}]}})});
-showAdd.value=false;await loadRoutes();
+showAdd.value=false;await loadRoutes();toast(t('added'));
 // Auto-select the newly added route so the editor/Test tab target it immediately
 const created=routes.value.find(r=>r.path===nf.path&&r.method.toLowerCase()===nf.method.toLowerCase());
 if(created)selRoute(created);
@@ -1747,18 +1779,18 @@ catch(e){test.result={ok:false,status:'Error',time:Date.now()-t0,body:e.message}
 async function doTest(){await sendReq()}
 async function loadLogs(){
 const r=await api('/_admin/projects/'+ap.value+'/logs?limit=100');
-if(r)logs.value=r.logs}
+if(r)logs.value=r.logs;toast(t('refreshed'))}
 function fmtTs(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleTimeString()}
 function logColor(t2){if(t2==='error')return'bg-red-100 text-red-700';if(t2.startsWith('auth'))return'bg-purple-100 text-purple-700';
 if(t2.includes('delete'))return'bg-red-100 text-red-700';return'bg-blue-100 text-blue-700'}
 async function switchProject(){await loadRoutes();sr.value=null}
 async function doNewProj(){const n=newProjName.value.trim();if(!n)return;
 await api('/_admin/projects',{method:'POST',body:JSON.stringify({name:n})});
-await api('/_admin/projects/'+n+'/activate',{method:'POST'});showNewProj.value=false;newProjName.value='';await loadAll();ap.value=n}
+await api('/_admin/projects/'+n+'/activate',{method:'POST'});showNewProj.value=false;newProjName.value='';await loadAll();ap.value=n;toast(t('created'))}
 async function issueJwt(){
 try{const ex=JSON.parse(jwt.extra||'{}');
 const r=await api('/_admin/jwt/issue',{method:'POST',body:JSON.stringify({subject:jwt.sub,extra_claims:ex})});
-if(r)jwt.result=r}catch(e){alert(e.message)}}
+if(r)jwt.result=r;toast(t('issued'))}catch(e){toast(e.message,'err')}}
 async function verifyJwt(){
 const r=await api('/_admin/jwt/verify',{method:'POST',body:JSON.stringify({token:jwt.verify})});
 if(r)jwt.vresult=r}
@@ -1774,12 +1806,12 @@ if(r){jwt.cfgMsg=lang.value==='zh'?'配置已保存':'Config saved';jwt.cfgOk=tr
 async function loadUsers(){const r=await api('/_admin/auth/users');if(r)userList.value=r.users||[]}
 async function doAddUser(){if(!nu.username)return;
 await api('/_admin/auth/users',{method:'POST',body:JSON.stringify({username:nu.username,password:nu.password,is_admin:nu.is_admin})});
-nu.username='';nu.password='';nu.is_admin=false;await loadUsers()}
+nu.username='';nu.password='';nu.is_admin=false;await loadUsers();toast(t('added'))}
 async function doRemoveUser(u){if(!confirm(t('delete')+' '+u+'?'))return;
-await api('/_admin/auth/users/'+u,{method:'DELETE'});await loadUsers()}
+await api('/_admin/auth/users/'+u,{method:'DELETE'});await loadUsers();toast(t('deleted'))}
 async function doChgPw(){if(!chgPwNew.value)return;
 await api('/_admin/auth/users/'+chgPwUser.value+'/password',{method:'PUT',body:JSON.stringify({new_password:chgPwNew.value})});
-showChgPw.value=false;chgPwNew.value=''}
+showChgPw.value=false;chgPwNew.value='';toast(t('saved'))}
 function toggleSettings(){showSettings.value=!showSettings.value;
 if(showSettings.value){cfg.enabled=authOn.value;cfg.msg=''}}
 async function saveCfg(){
@@ -1801,6 +1833,7 @@ token.value=d.token;cu.value=d.username;isAdmin.value=true;localStorage.setItem(
 showSetup.value=false;authOn.value=true;sf.u='';sf.p='';sf.p2='';sf.e='';await loadAll()}catch(e){sf.e=e.message}}
 return{token,authOn,cu,isAdmin,ap,projects,routes,sr,ef,mt,sq,showLog,showJwt,showAdd,showNewProj,showUsers,logs,methods,
 lf,test,jwt,jwtSecretVis,nf,fr,newProjName,userList,nu,showChgPw,chgPwUser,chgPwNew,projectHost,lang,langToggle,t,toggleLang,
+toasts,pending,run,openUsers,
 showSettings,showSetup,cfg,sf,toggleSettings,saveCfg,doSetup,
 login,logout,selRoute,parseBody,addResp,saveRoute,delRoute,doAddRoute,sendReq,doTest,loadLogs,fmtTs,logColor,
 switchProject,doNewProj,issueJwt,verifyJwt,toggleJwt,loadJwtConfig,saveJwtConfig,
