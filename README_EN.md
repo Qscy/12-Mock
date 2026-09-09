@@ -264,3 +264,9 @@ The management UI needs Vue 3 and CodeMirror 5. Every asset tag in the page poin
 ## License
 
 MIT
+
+## Power By
+
+- qwen3.7-max
+- deepseek-v4[.1]-flash
+- glm5.3-flash
