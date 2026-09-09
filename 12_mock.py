@@ -1296,6 +1296,12 @@ class AssetManager:
         return out
 
 
+def _asset_version(name: str) -> str:
+    """Stable cache-busting token: changes only when the asset content changes."""
+    digest = ASSET_MANIFEST[name]["sha384"].split("-", 1)[-1]
+    return digest[:10].replace("+", "-").replace("/", "_")
+
+
 def _asset_tag(assets: AssetManager, name: str) -> str:
     """Render one <script>/<link> tag.
 
@@ -1303,8 +1309,9 @@ def _asset_tag(assets: AssetManager, name: str) -> str:
     the cached file, fetch it, or redirect to a CDN mirror. No SRI: a
     proxy-rewritten CDN response would otherwise block the script and leave a
     blank page. The cached copy is hash-validated when it is downloaded instead.
+    The ?v= token busts any stale browser cache entry.
     """
-    url = assets.url_for(name)
+    url = f"{assets.url_for(name)}?v={_asset_version(name)}"
     if name.endswith(".css"):
         return f'<link rel="stylesheet" href="{url}" onerror="__assetErr&&__assetErr(this.href)">'
     return f'<script src="{url}" onerror="__assetErr&&__assetErr(this.src)"></script>'
@@ -1376,6 +1383,11 @@ Vue 3 未能加载，管理界面无法启动。<br>
 请检查网络，或把 <code>vue.global.prod.js</code> 等前端资源放入 <code>&lt;data_dir&gt;/vendor/</code>（或脚本同级的 <code>vendor/</code>）后刷新页面。<br>
 <span style="color:#64748b">Mock 接口本身不受影响：各项目端口上的路由仍可正常调用。</span>
 <pre id="vue-missing-urls" hidden style="margin:10px 0 0;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#b91c1c;white-space:pre-wrap;word-break:break-all"></pre>
+<div id="vue-missing-server" hidden style="margin-top:10px;padding:8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;color:#0f172a"></div>
+<div style="margin-top:12px;display:flex;gap:8px">
+<button onclick="location.reload()" style="padding:6px 14px;border-radius:5px;border:none;background:#3b82f6;color:#fff;font-size:12px;cursor:pointer">重新加载 / Reload</button>
+<button onclick="location.href='/_admin/assets'" style="padding:6px 14px;border-radius:5px;border:1px solid #d1d5db;background:#fff;color:#374151;font-size:12px;cursor:pointer">查看资源状态 / Asset status</button>
+</div>
 </div></div>
 <div id="app" v-cloak>
 <!-- Transient feedback for async actions -->
@@ -1587,6 +1599,18 @@ if (typeof Vue === 'undefined') {
   const box = document.getElementById('vue-missing-urls');
   const failed = window.__assetFailures || [];
   if (box && failed.length) { box.textContent = failed.join('\n'); box.hidden = false; }
+  // Ask the server what it thinks, so it is obvious whether to blame the
+  // browser (stale cache, extension, proxy) or the server.
+  fetch('/_admin/assets').then(r => r.json()).then(d => {
+    const list = d.assets || [];
+    const ok = list.filter(a => a.vendored).length;
+    const el = document.getElementById('vue-missing-server');
+    if (!el) return;
+    el.textContent = (ok === list.length && list.length)
+      ? `服务端资源就绪（${ok}/${list.length}）。既然这里仍然失败，问题多半在浏览器：请按 Ctrl+F5 强制刷新，或用无痕窗口再试（缓存 / 插件 / 代理拦截）。`
+      : `服务端只缓存了 ${ok}/${list.length} 个资源，请检查服务器能否访问 jsDelivr / unpkg。`;
+    el.hidden = false;
+  }).catch(() => {});
   return;
 }
 const{createApp,ref,reactive,computed,onMounted,onBeforeUnmount,watch,nextTick}=Vue;
@@ -1939,7 +1963,10 @@ def create_app(config: AppConfig) -> FastAPI:
     # ---- Frontend shell & vendored assets (must stay reachable without auth) ----
     @app.get("/", response_class=HTMLResponse)
     async def frontend():
-        return HTMLResponse(content=render_frontend(assets))
+        # Never let a browser cache this shell: a stale copy could reference
+        # assets from an older build.
+        return HTMLResponse(content=render_frontend(assets),
+                            headers={"Cache-Control": "no-store, must-revalidate"})
 
     @app.get("/_admin/assets/{name}")
     async def frontend_asset(name: str):
