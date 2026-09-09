@@ -1445,7 +1445,6 @@ FRONTEND_HTML = r'''<!DOCTYPE html>
 <!--ASSET_TAGS-->
 <style>
 [v-cloak]{display:none}body{margin:0;font-family:system-ui,sans-serif;background:#f1f5f9}
-.json{white-space:pre-wrap;font-family:Consolas,monospace;font-size:13px;line-height:1.6}
 .si{cursor:pointer;padding:5px 10px;border-radius:6px;display:flex;align-items:center;gap:6px;font-size:12px}
 .si:hover{background:#e2e8f0}.si.act{background:#3b82f6;color:#fff}
 .mb{font-size:9px;font-weight:800;padding:2px 6px;border-radius:3px;min-width:44px;text-align:center;color:#fff}
@@ -1609,7 +1608,7 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <div class="flex gap-3 text-xs mb-2">
 <span :class="test.result.ok?'text-green-600':'text-red-600'">{{test.result.status}}</span>
 <span class="text-gray-400">{{test.result.time}}ms</span></div>
-<pre class="json text-xs bg-gray-50 p-2 rounded">{{test.result.body}}</pre></div></div>
+<json-editor v-model="test.result.body" :readonly="true"></json-editor></div></div>
 </div></div>
 <div v-else class="flex-1 flex items-center justify-center text-gray-400 text-sm">{{t('selectRoute')}}</div>
 </main></div>
@@ -1747,7 +1746,9 @@ if (typeof CodeMirror !== 'undefined' && !CodeMirror.modes['json-hl']) {
 }
 const _JE = {
   template: '<div ref="el"></div>',
-  props: { modelValue: { type: String, default: '{}' } },
+  // readonly renders the very same JSON editor as a viewer (highlighting, line
+  // numbers, folding), so a response reads exactly like the request body is edited.
+  props: { modelValue: { type: String, default: '{}' }, readonly: { type: Boolean, default: false } },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
     let cm = null;
@@ -1774,9 +1775,10 @@ const _JE = {
           indentUnit: 2,
           tabSize: 2,
           lineNumbers: true,
+          readOnly: !!props.readonly,
           foldGutter: { rangeFinder: CodeMirror.fold.brace },
           gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-          extraKeys: {
+          extraKeys: props.readonly ? {} : {
             'Ctrl-Space': 'autocomplete',
             'Shift-Tab': 'indentLess',
             '@': function (e2) { e2.replaceSelection('@'); e2.showHint({ hint: mockHint, completeSingle: false }); }
@@ -1912,6 +1914,15 @@ function logout(){token.value='';localStorage.removeItem('mock_token');location.
 // A stored body may be an object (valid JSON) or a raw string (a template that
 // is not valid JSON). Stringifying a string again would show it double-quoted.
 function bodyText(v){return typeof v==='string'?v:JSON.stringify(v===undefined||v===null?{}:v,null,2)}
+// Text the Test tab shows for a response body. A JSON string body (JSON stored
+// as a string, or a raw template that is not valid JSON) must not be encoded a
+// second time: parse it back so the viewer shows beautified JSON, and fall back
+// to the raw text when it is not JSON at all.
+function prettyBody(v){
+if(typeof v==='string'){const s=v.trim();
+if(s&&(s[0]==='{'||s[0]==='[')){try{return JSON.stringify(JSON.parse(s),null,2)}catch(e){}}
+return v}
+return JSON.stringify(v===undefined?null:v,null,2)}
 function selRoute(r){sr.value=r;ef.method=r.method;ef.path=r.path;
 const d=r.definition||{};
 ef.def={enabled:d['x-mock-enabled']??true,response_mode:d['x-mock-response-mode']||'sequential',
@@ -1954,7 +1965,10 @@ let body;
 if(!['GET','HEAD'].includes(test.method)&&test.body&&test.body.trim()){
 body=test.body;headers['Content-Type']=headers['Content-Type']||'application/json'}
 const r=await fetch(base+test.url,{method:test.method,headers,body});
-const d=await r.json();test.result={ok:r.ok,status:r.status,time:Date.now()-t0,body:JSON.stringify(d,null,2)}}
+const txt=await r.text();
+let d;
+try{d=JSON.parse(txt)}catch(e){d=undefined}
+test.result={ok:r.ok,status:r.status,time:Date.now()-t0,body:d===undefined?txt:prettyBody(d)}}
 catch(e){test.result={ok:false,status:'Error',time:Date.now()-t0,body:e.message}}}
 async function doTest(){await sendReq()}
 async function loadLogs(){
