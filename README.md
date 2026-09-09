@@ -262,3 +262,9 @@ mock_data/
 ## License
 
 MIT
+
+## Power By
+
+- qwen3.7-max
+- deepseek-v4[.1]-flash
+- glm5.3-flash
