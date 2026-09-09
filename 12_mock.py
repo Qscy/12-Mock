@@ -1909,12 +1909,15 @@ const d=await r.json();if(!r.ok){lf.e=d.detail||'Failed';return}
 token.value=d.token;cu.value=d.username;isAdmin.value=!!d.is_admin;localStorage.setItem('mock_token',d.token);
 lf.e='';await loadAll()}catch(e){lf.e=e.message}}
 function logout(){token.value='';localStorage.removeItem('mock_token');location.reload()}
+// A stored body may be an object (valid JSON) or a raw string (a template that
+// is not valid JSON). Stringifying a string again would show it double-quoted.
+function bodyText(v){return typeof v==='string'?v:JSON.stringify(v===undefined||v===null?{}:v,null,2)}
 function selRoute(r){sr.value=r;ef.method=r.method;ef.path=r.path;
 const d=r.definition||{};
 ef.def={enabled:d['x-mock-enabled']??true,response_mode:d['x-mock-response-mode']||'sequential',
 jwt_protected:d['x-mock-jwt-protected']||false,
-responses:(d['x-mock-responses']||[]).map(r=>({...r,_bodyText:JSON.stringify(r.body,null,2)})),
-intercept:{...(d['x-mock-intercept']||{enabled:false,status:500,body:{}}),_bodyText:JSON.stringify((d['x-mock-intercept']||{}).body||{},null,2)},
+responses:(d['x-mock-responses']||[]).map(r=>({...r,_bodyText:bodyText(r.body)})),
+intercept:{...(d['x-mock-intercept']||{enabled:false,status:500,body:{}}),_bodyText:bodyText((d['x-mock-intercept']||{}).body)},
 redirect:{...(d['x-mock-redirect']||{enabled:false,url:'',status:302})}};
 mt.value='resp';test.method=r.method;test.url=r.path}
 function parseBody(resp){try{resp.body=JSON.parse(resp._bodyText)}catch{resp.body=resp._bodyText}}
