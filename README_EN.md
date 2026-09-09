@@ -39,21 +39,21 @@ pip install fastapi uvicorn[standard] pyjwt faker
 ### Run
 
 ```bash
-python mock_api.py
+python 12_mock.py
 ```
 
-Open http://localhost:8080 in your browser to access the management UI.
+Open http://localhost:12308 in your browser to access the management UI.
 
 ### CLI Arguments
 
 ```bash
-python mock_api.py --host 0.0.0.0 --port 8080 --data ./mock_data
+python 12_mock.py --host 0.0.0.0 --port 12308 --data ./mock_data
 ```
 
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `--host` | `0.0.0.0` | Listen address |
-| `--port` | `8080` | Listen port |
+| `--port` | `12308` | Listen port |
 | `--data` | `./mock_data` | Data storage directory |
 
 ## First-Time Setup
@@ -67,12 +67,14 @@ python mock_api.py --host 0.0.0.0 --port 8080 --data ./mock_data
 
 ### Mock Routes
 
-All mock endpoints are prefixed with `/mock/{project}`:
+Mock routes are served at their **raw paths** — each project runs on its own port, and there is **no** `/mock/{project}` prefix:
 
 ```
-GET  http://localhost:8080/mock/demo/api/users
-POST http://localhost:8080/mock/demo/api/login
+GET  http://localhost:12309/api/users
+POST http://localhost:12309/api/login
 ```
+
+The project port is shown as `name :port` in the project dropdown at the top of the admin UI (allocated automatically starting at 12309).
 
 ### Management API
 
@@ -97,6 +99,7 @@ POST http://localhost:8080/mock/demo/api/login
 | `GET` | `/_admin/projects/{name}/logs` | Query audit logs |
 | `POST` | `/_admin/jwt/issue` | Issue JWT Token |
 | `POST` | `/_admin/jwt/verify` | Verify JWT Token |
+| `GET` | `/_admin/assets` | Frontend asset readiness (vendored / CDN) |
 | `GET` | `/_admin/jwt/config` | Get JWT config |
 | `PUT` | `/_admin/jwt/config` | Update JWT config |
 
@@ -223,9 +226,28 @@ Enable by modifying `global_config.json`:
 | Validation | Pydantic v2 |
 | JWT | PyJWT |
 | MockJS Engine | Pure Python regex + Faker (zh_CN) |
-| Frontend UI | Vue 3 (CDN) + Tailwind CSS (CDN) |
+| Frontend UI | Vue 3 + Tailwind CSS (assets localized, see below) |
 | Storage | Filesystem (JSON / JSONL) |
 | Password Hashing | SHA256 + salt (hashlib) |
+
+## Frontend Assets & Offline Deployment
+
+The management UI needs Vue 3 and CodeMirror 5. They are resolved in this order, so **the first run caches them and everything works offline afterwards**:
+
+| Order | Location | Purpose |
+|-------|----------|---------|
+| 1 | `<script dir>/vendor/` | Pre-seeded for air-gapped/intranet setups; wins over everything |
+| 2 | `<data dir>/vendor/` | Cache auto-filled on the first run |
+| 3 | Upstream CDN | Last resort, so a fresh clone still opens |
+
+- Tailwind CSS is **never fetched from a CDN**: it is compiled at build time from this file's own template and inlined into `12_mock.py`, so no CSS is compiled in the browser at runtime.
+- Offline install: drop these files into `<script dir>/vendor/` and no network is needed —
+  `vue.global.prod.js`, `codemirror.js`, `codemirror.css`, `codemirror.closebrackets.js`,
+  `codemirror.matchbrackets.js`, `codemirror.foldcode.js`, `codemirror.foldgutter.js`,
+  `codemirror.foldgutter.css`, `codemirror.brace-fold.js`, `codemirror.show-hint.js`,
+  `codemirror.show-hint.css`
+- Check asset readiness with `GET /_admin/assets` (returns each asset's `vendored` flag and byte count).
+- If Vue still fails to load, the page shows an actionable message instead of a blank screen, and the Mock endpoints keep working.
 
 ## License
 

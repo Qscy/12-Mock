@@ -8,6 +8,7 @@ APP_NAME = "12 Mock"
 # ══════════════════════════════════════════════════════════════════════════════
 import json, os, re, time, uuid, random, secrets, hashlib, tempfile, shutil, argparse, itertools, copy, asyncio
 import threading
+import urllib.request
 from contextlib import asynccontextmanager
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
@@ -981,24 +982,173 @@ def create_management_api(app, storage, mockjs, logger, auth_mgr, jwt_managers, 
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# [10] FRONTEND HTML/CSS/JS
+# [10] FRONTEND ASSETS & HTML/CSS/JS
 # ══════════════════════════════════════════════════════════════════════════════
+# Vue 3 and CodeMirror 5 are resolved at runtime, in this order:
+#   1. <script_dir>/vendor/<file>  — air-gapped pre-seed, always wins
+#   2. <data_dir>/vendor/<file>    — cache, auto-filled on the first run
+#   3. the upstream CDN            — last resort, so a fresh clone still works
+# Tailwind is never fetched: its CSS is pre-compiled from this very template at
+# build time and inlined as TAILWIND_CSS, so nothing JIT-compiles CSS at runtime.
+
+CDN_CM = "https://cdn.jsdelivr.net/npm/codemirror@5.65.21"
+
+ASSET_MANIFEST: Dict[str, Dict[str, str]] = {
+    "vue.global.prod.js": {
+        "url": "https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js",
+        "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-6pS1WSZJY7wOk6qQTa9C9U2W1/qzqL7iYoMil7qn9KFeN5fZDAwIExgCd7U5AH+X",
+    },
+    "codemirror.css": {
+        "url": f"{CDN_CM}/lib/codemirror.css", "type": "text/css; charset=utf-8",
+        "sha384": "sha384-bsaAhvdduZPAwUb7RRLRvDgtEtOsggrgjkr/EjPO1i/vdoi+DmdLaG79UOt6M5hD",
+    },
+    "codemirror.show-hint.css": {
+        "url": f"{CDN_CM}/addon/hint/show-hint.css", "type": "text/css; charset=utf-8",
+        "sha384": "sha384-kRjsHewXHC/tDWR5ARIYrr4L9IxbrrwQK6SDeJhyeC1zxtq7P9RYvyBp/H8lah6U",
+    },
+    "codemirror.foldgutter.css": {
+        "url": f"{CDN_CM}/addon/fold/foldgutter.css", "type": "text/css; charset=utf-8",
+        "sha384": "sha384-gW0T7WIPsj+5+b/qOsKxiwxdUCfZsjfGtzACaGGLdwEHq/pZ4aS5daCrQznA4Y8H",
+    },
+    "codemirror.js": {
+        "url": f"{CDN_CM}/lib/codemirror.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-YbR2n4zUtdAz2YuqQsJFpjrgTl5SPEm0NG+y8/y3R63tAWTA3O7TOyIWyYYcqUqU",
+    },
+    "codemirror.closebrackets.js": {
+        "url": f"{CDN_CM}/addon/edit/closebrackets.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-pF/JiVjqZ1pMXmw6/3YCvu7PgYNcVJTxusZ7AuvTvSFR9iw74b85dWF5WYXeQ5t5",
+    },
+    "codemirror.matchbrackets.js": {
+        "url": f"{CDN_CM}/addon/edit/matchbrackets.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-BR0XTjTC3KMLHwZITuYVfySwKtsCtaKjnWj5Rk0rSQRWxnq1kO82+K8EKFmw/sW5",
+    },
+    "codemirror.foldcode.js": {
+        "url": f"{CDN_CM}/addon/fold/foldcode.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-CuXFmAVUOt4I7Pd2lbA7N/01JQ8nPHBjG3RD8XQEA7GliZKXWgHCKoGdgdYV23JU",
+    },
+    "codemirror.foldgutter.js": {
+        "url": f"{CDN_CM}/addon/fold/foldgutter.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-RGh7YF44e45iAIqueURleEQC7RHvpzMUdpU+fqiIsbOOJdgupIf+287BbM1za4vJ",
+    },
+    "codemirror.brace-fold.js": {
+        "url": f"{CDN_CM}/addon/fold/brace-fold.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-Gk9oy57aJ1GhL9olRThY4/vt43s3ITCd6Z8IW0fG1YMs41LbcmCQOmmvIhk17m7p",
+    },
+    "codemirror.show-hint.js": {
+        "url": f"{CDN_CM}/addon/hint/show-hint.js", "type": "application/javascript; charset=utf-8",
+        "sha384": "sha384-hgYcouq6Guwa7Sq//tR+C0EUWtpH99eqSERq/pRCZhI/PFlxofIegzbImONYC8S1",
+    },
+}
+
+# Order matters: the CodeMirror library must be defined before its addons run.
+ASSET_CSS_ORDER = ("codemirror.css", "codemirror.show-hint.css", "codemirror.foldgutter.css")
+ASSET_JS_ORDER = ("codemirror.js", "codemirror.closebrackets.js", "codemirror.matchbrackets.js",
+                  "codemirror.foldcode.js", "codemirror.foldgutter.js", "codemirror.brace-fold.js",
+                  "codemirror.show-hint.js")
+VUE_ASSET = "vue.global.prod.js"
+
+
+class AssetManager:
+    """Locates vendored frontend assets and can fetch them once into the data dir."""
+
+    def __init__(self, data_dir, script_dir):
+        self.data_dir = Path(data_dir)
+        self.search_dirs = [Path(script_dir) / "vendor", self.data_dir / "vendor"]
+        self._lock = threading.Lock()
+
+    def local_path(self, name: str) -> Optional[Path]:
+        """Return the on-disk path of a vendored asset, or None. Also guards traversal."""
+        if name not in ASSET_MANIFEST:
+            return None
+        for d in self.search_dirs:
+            p = d / name
+            try:
+                if p.is_file() and p.stat().st_size > 0:
+                    return p
+            except OSError:
+                continue
+        return None
+
+    def url_for(self, name: str) -> str:
+        """Same-origin URL when vendored, otherwise the upstream CDN URL."""
+        return f"/_admin/assets/{name}" if self.local_path(name) else ASSET_MANIFEST[name]["url"]
+
+    def content_type(self, name: str) -> str:
+        return ASSET_MANIFEST[name]["type"]
+
+    def download(self, name: str, timeout: int = 20) -> bool:
+        """Fetch one asset into <data_dir>/vendor, atomically. Never raises."""
+        if name not in ASSET_MANIFEST or self.local_path(name):
+            return True
+        with self._lock:
+            if self.local_path(name):
+                return True
+            dest_dir = self.data_dir / "vendor"
+            try:
+                dest_dir.mkdir(parents=True, exist_ok=True)
+                req = urllib.request.Request(ASSET_MANIFEST[name]["url"],
+                                             headers={"User-Agent": f"{APP_NAME}/{__version__}"})
+                with urllib.request.urlopen(req, timeout=timeout) as resp:
+                    data = resp.read()
+                if not data:
+                    return False
+                tmp = dest_dir / (name + ".tmp")
+                tmp.write_bytes(data)
+                os.replace(tmp, dest_dir / name)
+                return True
+            except Exception:
+                return False
+
+    def warm(self) -> None:
+        """Best-effort fetch of every missing asset; gives up after the first failure."""
+        for name in ASSET_MANIFEST:
+            if not self.local_path(name) and not self.download(name):
+                return
+
+    def start_warm(self) -> None:
+        threading.Thread(target=self.warm, daemon=True).start()
+
+    def status(self) -> List[dict]:
+        out = []
+        for name, meta in ASSET_MANIFEST.items():
+            p = self.local_path(name)
+            out.append({"name": name, "vendored": bool(p),
+                        "bytes": p.stat().st_size if p else 0, "cdn": meta["url"]})
+        return out
+
+
+def _asset_tag(assets: AssetManager, name: str) -> str:
+    """Render one <script>/<link> tag, adding SRI only when we point at a CDN."""
+    url = assets.url_for(name)
+    is_css = name.endswith(".css")
+    if url.startswith("/"):  # served by this server: same-origin, SRI unnecessary
+        return (f'<link rel="stylesheet" href="{url}">' if is_css
+                else f'<script src="{url}"></script>')
+    sri = f' integrity="{ASSET_MANIFEST[name]["sha384"]}" crossorigin="anonymous"'
+    return (f'<link rel="stylesheet" href="{url}"{sri}>' if is_css
+            else f'<script src="{url}"{sri}></script>')
+
+
+def build_asset_tags(assets: AssetManager) -> str:
+    tags = [_asset_tag(assets, VUE_ASSET)]
+    tags += [_asset_tag(assets, n) for n in ASSET_CSS_ORDER]
+    tags += [_asset_tag(assets, n) for n in ASSET_JS_ORDER]
+    return "\n".join(tags)
+
+
+def render_frontend(assets: AssetManager) -> str:
+    return (FRONTEND_HTML
+            .replace("<!--ASSET_TAGS-->", build_asset_tags(assets))
+            .replace("<!--TAILWIND_STYLE-->", f"<style>{TAILWIND_CSS}</style>"))
+
+
+TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
 
 FRONTEND_HTML = r'''<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>12 Mock - One To Mock</title>
-<script src="https://unpkg.com/vue@3.4.21/dist/vue.global.prod.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/lib/codemirror.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/hint/show-hint.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/fold/foldgutter.css">
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/lib/codemirror.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/edit/closebrackets.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/edit/matchbrackets.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/fold/foldcode.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/fold/foldgutter.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/fold/brace-fold.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.21/addon/hint/show-hint.js"></script>
+<!--ASSET_TAGS-->
 <style>
 [v-cloak]{display:none}body{margin:0;font-family:system-ui,sans-serif;background:#f1f5f9}
 .json{white-space:pre-wrap;font-family:Consolas,monospace;font-size:13px;line-height:1.6}
@@ -1026,7 +1176,17 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 .CodeMirror .cm-bracket{color:#64748b}
 .CodeMirror .cm-matchingBracket{background-color:rgba(59,130,246,.18);outline:1px solid #3b82f6;color:inherit!important}
 .CodeMirror .cm-nonmatchingBracket{color:#dc2626!important}
-</style></head><body>
+</style>
+<!--TAILWIND_STYLE--></head><body>
+<noscript><div style="padding:24px;font-family:system-ui,sans-serif;font-size:13px">This admin UI requires JavaScript.</div></noscript>
+<!-- Shown only when the Vue runtime could not be loaded at all (see the guard below). -->
+<div id="vue-missing" hidden style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#f1f5f9;padding:24px">
+<div style="max-width:560px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:20px;font-family:system-ui,sans-serif;font-size:13px;line-height:1.8;color:#334155">
+<strong style="display:block;margin-bottom:6px;color:#dc2626">前端运行时加载失败 / Frontend runtime failed to load</strong>
+Vue 3 未能加载，管理界面无法启动。<br>
+请检查网络，或把 <code>vue.global.prod.js</code> 等前端资源放入 <code>&lt;data_dir&gt;/vendor/</code>（或脚本同级的 <code>vendor/</code>）后刷新页面。<br>
+<span style="color:#64748b">Mock 接口本身不受影响：各项目端口上的路由仍可正常调用。</span>
+</div></div>
 <div id="app" v-cloak>
 <!-- First-run Admin Setup Dialog (top-level: must render on the login screen too) -->
 <div v-if="showSetup" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
@@ -1145,7 +1305,7 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 <div class="px-3 py-1 border-b flex justify-between items-center text-xs font-semibold">
 {{t('auditLogs')}} <button class="btn bo text-xs" @click="loadLogs">{{t('refresh')}}</button></div>
 <div class="flex-1 overflow-y-auto p-2">
-<table class="w-full text-xs"><tr v-for="l in logs" :key="l.ts" class="border-b border-gray-50">
+<table class="w-full text-xs"><tr v-for="(l,i) in logs" :key="i" class="border-b border-gray-50">
 <td class="py-1 px-2 text-gray-400">{{fmtTs(l.ts)}}</td>
 <td class="py-1 px-2"><span class="px-1 rounded" :class="logColor(l.type)">{{l.type}}</span></td>
 <td class="py-1 px-2">{{l.method}} {{l.path}}</td>
@@ -1227,6 +1387,10 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 </div>
 </div>
 <script>
+(function(){
+// Guard: without the Vue runtime the rest of this script would throw and leave
+// a blank page. Show an actionable message instead.
+if (typeof Vue === 'undefined') { document.getElementById('vue-missing').hidden = false; return; }
 const{createApp,ref,reactive,computed,onMounted,onBeforeUnmount,watch,nextTick}=Vue;
 if (typeof CodeMirror !== 'undefined' && !CodeMirror.modes['json-hl']) {
   CodeMirror.defineMode('json-hl', function (config) {
@@ -1388,7 +1552,9 @@ const sf=reactive({u:'',p:'',p2:'',e:''});
 const projectHost=computed(()=>{const p=projects.value.find(x=>x.name===ap.value);return p&&p.port?'localhost:'+p.port:'localhost'});
 function h(){return token.value?{'Authorization':'Bearer '+token.value}:{}}
 async function api(path,opts={}){
-const r=await fetch(path,{...opts,headers:{...(opts.headers||{}),...h(),'Content-Type':'application/json'}});
+const init={...opts,headers:{...(opts.headers||{}),...h()}};
+if(init.body!=null&&init.body!=='')init.headers['Content-Type']=init.headers['Content-Type']||'application/json';
+const r=await fetch(path,init);
 if(r.status===401&&authOn.value){token.value='';localStorage.removeItem('mock_token');location.reload();return}
 if(r.status===403){const d=await r.json().catch(()=>({}));alert(d.detail||'Admin only');return}
 return r.json()}
@@ -1425,7 +1591,7 @@ function addResp(){ef.def.responses.push({name:'response-'+(ef.def.responses.len
 const fr=computed(()=>{const q=sq.value.toLowerCase();
 return routes.value.filter(r=>!q||r.path.toLowerCase().includes(q)||r.method.toLowerCase().includes(q))});
 async function saveRoute(){
-const def={...ef.def};def.responses=def.responses.map(r=>{const{_,...rest}=r;const{_bodyText,...clean}=r;return clean});
+const def={...ef.def};def.responses=def.responses.map(r=>{const{_bodyText,...clean}=r;return clean});
 const ic={...def.intercept};try{ic.body=JSON.parse(ic._bodyText)}catch{};delete ic._bodyText;def.intercept=ic;
 await api('/_admin/projects/'+ap.value+'/routes',{method:'PUT',body:JSON.stringify({path:ef.path,method:ef.method.toLowerCase(),definition:def})});
 await loadRoutes()}
@@ -1518,6 +1684,7 @@ login,logout,selRoute,parseBody,addResp,saveRoute,delRoute,doAddRoute,sendReq,do
 switchProject,doNewProj,issueJwt,verifyJwt,toggleJwt,loadJwtConfig,saveJwtConfig,
 loadUsers,doAddUser,doRemoveUser,doChgPw}
 }}).component('json-editor',_JE).mount('#app')
+})();
 </script></body></html>'''
 
 
@@ -1532,6 +1699,8 @@ def create_app(config: AppConfig) -> FastAPI:
     auth_manager = AuthManager(storage)
     jwt_mgrs: Dict[str, JWTManager] = {}
     psm = ProjectServerManager(config.host, storage, mockjs, log_auditor, jwt_mgrs)
+    assets = AssetManager(config.base_dir, Path(__file__).resolve().parent)
+    assets.start_warm()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -1547,11 +1716,25 @@ def create_app(config: AppConfig) -> FastAPI:
 
     create_management_api(app, storage, mockjs, log_auditor, auth_manager, jwt_mgrs, psm)
 
+    # ---- Frontend shell & vendored assets (must stay reachable without auth) ----
     @app.get("/", response_class=HTMLResponse)
     async def frontend():
-        return HTMLResponse(content=FRONTEND_HTML)
+        return HTMLResponse(content=render_frontend(assets))
+
+    @app.get("/_admin/assets/{name}")
+    async def frontend_asset(name: str):
+        path = assets.local_path(name)
+        if path is None:
+            raise HTTPException(404, "Asset is not vendored")
+        return Response(content=path.read_bytes(), media_type=assets.content_type(name),
+                        headers={"Cache-Control": "public, max-age=86400"})
+
+    @app.get("/_admin/assets")
+    async def frontend_asset_status():
+        return {"assets": assets.status()}
 
     app.state.psm = psm
+    app.state.assets = assets
     return app
 
 

@@ -13,3 +13,6 @@ mock_data/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local scratch (asset staging, verification output)
+.tmp/

@@ -37,21 +37,21 @@ pip install fastapi uvicorn[standard] pyjwt faker
 ### 启动
 
 ```bash
-python mock_api.py
+python 12_mock.py
 ```
 
-启动后访问 http://localhost:8080 即可进入管理界面。
+启动后访问 http://localhost:12308 即可进入管理界面。
 
 ### 命令行参数
 
 ```bash
-python mock_api.py --host 0.0.0.0 --port 8080 --data ./mock_data
+python 12_mock.py --host 0.0.0.0 --port 12308 --data ./mock_data
 ```
 
 | 参数 | 默认值 | 说明 |
 |------|--------|------|
 | `--host` | `0.0.0.0` | 监听地址 |
-| `--port` | `8080` | 监听端口 |
+| `--port` | `12308` | 监听端口 |
 | `--data` | `./mock_data` | 数据存储目录 |
 
 ## 首次使用
@@ -65,12 +65,14 @@ python mock_api.py --host 0.0.0.0 --port 8080 --data ./mock_data
 
 ### Mock 路由
 
-Mock 接口统一以 `/mock/{project}` 为前缀，例如：
+Mock 路由按**原始路径**直接访问——每个项目运行在独立端口上，**没有** `/mock/{project}` 前缀：
 
 ```
-GET  http://localhost:8080/mock/demo/api/users
-POST http://localhost:8080/mock/demo/api/login
+GET  http://localhost:12309/api/users
+POST http://localhost:12309/api/login
 ```
+
+项目端口在管理界面顶部的项目下拉框中以 `项目名 :端口` 显示（默认从 12309 起自动分配）。
 
 ### 管理 API
 
@@ -95,6 +97,7 @@ POST http://localhost:8080/mock/demo/api/login
 | `GET` | `/_admin/projects/{name}/logs` | 查询审计日志 |
 | `POST` | `/_admin/jwt/issue` | 签发 JWT Token |
 | `POST` | `/_admin/jwt/verify` | 验证 JWT Token |
+| `GET` | `/_admin/assets` | 前端资源就绪状态（vendored / CDN） |
 | `GET` | `/_admin/jwt/config` | 获取 JWT 配置 |
 | `PUT` | `/_admin/jwt/config` | 更新 JWT 配置 |
 
@@ -221,9 +224,28 @@ mock_data/
 | 数据校验 | Pydantic v2 |
 | JWT | PyJWT |
 | MockJS 引擎 | 纯 Python 正则 + Faker (zh_CN) |
-| 前端 UI | Vue 3 (CDN) + Tailwind CSS (CDN) |
+| 前端 UI | Vue 3 + Tailwind CSS（资源本地化，见下） |
 | 存储 | 文件系统（JSON / JSONL） |
 | 密码哈希 | SHA256 + salt (hashlib) |
+
+## 前端资源与离线部署
+
+管理界面依赖 Vue 3 与 CodeMirror 5。这些资源按以下顺序解析，**首次运行会自动缓存，之后完全离线可用**：
+
+| 顺序 | 位置 | 说明 |
+|------|------|------|
+| 1 | `<脚本同级>/vendor/` | 内网/离线环境的预置目录，优先级最高 |
+| 2 | `<数据目录>/vendor/` | 首次运行自动下载并缓存的目录 |
+| 3 | 上游 CDN | 兜底，保证全新克隆也能直接打开 |
+
+- Tailwind CSS **不使用 CDN**：它的样式在构建期按本文件的模板预编译后内联进 `12_mock.py`，运行时不做任何 CSS 编译。
+- 离线部署：把下列文件放进 `<脚本同级>/vendor/` 即可，无需联网：
+  `vue.global.prod.js`、`codemirror.js`、`codemirror.css`、`codemirror.closebrackets.js`、
+  `codemirror.matchbrackets.js`、`codemirror.foldcode.js`、`codemirror.foldgutter.js`、
+  `codemirror.foldgutter.css`、`codemirror.brace-fold.js`、`codemirror.show-hint.js`、
+  `codemirror.show-hint.css`
+- 资源就绪情况可通过 `GET /_admin/assets` 查询（返回每个资源的 `vendored` 状态与字节数）。
+- 即使 Vue 加载失败，页面也会显示明确的排查提示，而不会白屏；Mock 接口本身不受影响。
 
 ## License
 
