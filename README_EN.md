@@ -135,7 +135,7 @@ Use placeholders in response body JSON — the engine renders them dynamically o
 | `@id` | ID card number | 110101199001011234 |
 | `@url` | URL | https://example.com |
 | `@ip` | IP address | 192.168.1.1 |
-| `@province` / `@city` / `@county` | Region | Guangdong / Shenzhen |
+| `@province` / `@city` / `@county` | Province / city / district | Guangdong / Shenzhen / Nanshan |
 | `@address` | Full address | Guangdong, Shenzhen, Nanshan |
 | `@datetime` | Datetime | 2026-09-08 14:30:00 |
 | `@date` | Date | 2026-09-08 |
@@ -143,10 +143,10 @@ Use placeholders in response body JSON — the engine renders them dynamically o
 | `@now` | Current time | 2026-09-08T14:30:00 |
 | `@integer(min,max)` | Random integer | 42 |
 | `@float(min,max,dmin,dmax)` | Random float | 3.14 |
-| `@boolean` | Boolean | true / false |
-| `@image(size)` | Image placeholder | http://dummyimage.com/200x200 |
+| `@boolean` | Boolean (real JSON true / false) | true / false |
+| `@image(size)` | Image placeholder | https://picsum.photos/200/200 |
 | `@color` | Color hex | #3b82f6 |
-| `@ctitle(min,max)` | Chinese title | 系统架构设计 |
+| `@ctitle(min,max)` | Chinese title (min~max characters) | 系统架构设计 |
 | `@cword(min,max)` | Chinese word | 开发 |
 | `@csentence(min,max)` | Chinese sentence | 这是一段模拟文本。 |
 | `@title` | English title | Hello World |
@@ -155,6 +155,16 @@ Use placeholders in response body JSON — the engine renders them dynamically o
 | `@paragraph` | English paragraph | Lorem ipsum... |
 | `@uuid` | UUID | a1b2c3d4-... |
 | `@guid` | GUID | Same as UUID |
+
+**Argument syntax**: numeric placeholders accept both the MockJS range form and the comma form:
+
+| Syntax | Meaning |
+|--------|---------|
+| `@integer(1-100)` / `@integer(1,100)` | random integer in 1~100 |
+| `@float(1-10,1-2)` / `@float(1,10,1,2)` | random float in 1~10 with 1~2 decimals |
+| `@string(3-5)` / `@string(3,5)` | random letter string of length 3~5 |
+| `@ctitle(5-10)` / `@ctitle(5,10)` | Chinese title of 5~10 characters |
+| `@date(yyyy-MM-dd)` | date formats accept both strftime and MockJS tokens |
 
 ### DTD Rules
 

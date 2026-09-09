@@ -133,7 +133,7 @@ POST http://localhost:12309/api/login
 | `@id` | 身份证号 | 110101199001011234 |
 | `@url` | URL | https://example.com |
 | `@ip` | IP 地址 | 192.168.1.1 |
-| `@province` / `@city` / `@county` | 地区 | 广东省 / 深圳市 |
+| `@province` / `@city` / `@county` | 省 / 市 / 区县 | 广东省 / 深圳市 / 南山区 |
 | `@address` | 完整地址 | 广东省深圳市南山区 |
 | `@datetime` | 日期时间 | 2026-09-08 14:30:00 |
 | `@date` | 日期 | 2026-09-08 |
@@ -141,10 +141,10 @@ POST http://localhost:12309/api/login
 | `@now` | 当前时间 | 2026-09-08T14:30:00 |
 | `@integer(min,max)` | 随机整数 | 42 |
 | `@float(min,max,dmin,dmax)` | 随机浮点数 | 3.14 |
-| `@boolean` | 布尔值 | true / false |
-| `@image(size)` | 图片占位 | http://dummyimage.com/200x200 |
+| `@boolean` | 布尔值（JSON true / false） | true / false |
+| `@image(size)` | 图片占位 | https://picsum.photos/200/200 |
 | `@color` | 颜色值 | #3b82f6 |
-| `@ctitle(min,max)` | 中文标题 | 系统架构设计 |
+| `@ctitle(min,max)` | 中文标题（长度为 min~max 字符） | 系统架构设计 |
 | `@cword(min,max)` | 中文词语 | 开发 |
 | `@csentence(min,max)` | 中文句子 | 这是一段模拟文本。 |
 | `@title` | 英文标题 | Hello World |
@@ -153,6 +153,16 @@ POST http://localhost:12309/api/login
 | `@paragraph` | 英文段落 | Lorem ipsum... |
 | `@uuid` | UUID | a1b2c3d4-... |
 | `@guid` | GUID | 同 UUID |
+
+**参数写法**：数值占位符同时接受 MockJS 的区间写法与逗号写法，两者等价：
+
+| 写法 | 含义 |
+|------|------|
+| `@integer(1-100)` / `@integer(1,100)` | 1~100 随机整数 |
+| `@float(1-10,1-2)` / `@float(1,10,1,2)` | 1~10 随机浮点，保留 1~2 位小数 |
+| `@string(3-5)` / `@string(3,5)` | 长度 3~5 的随机字母串 |
+| `@ctitle(5-10)` / `@ctitle(5,10)` | 5~10 个字符的中文标题 |
+| `@date(yyyy-MM-dd)` | 日期格式支持 strftime 与 MockJS 记号 |
 
 ### DTD 规则
 

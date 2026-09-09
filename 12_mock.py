@@ -125,48 +125,158 @@ class MockJSEngine:
 
     def __init__(self):
         self._handlers = {
+            # numbers / identifiers
             "integer": self._integer, "float": self._float, "boolean": self._boolean,
-            "string": self._string, "uuid": self._uuid, "id": self._id,
-            "natural": self._natural, "pick": self._pick,
+            "string": self._string, "natural": self._natural, "pick": self._pick,
+            "uuid": self._uuid, "guid": self._uuid, "id": self._id, "color": self._color,
+            # person & contact
             "cname": lambda a: FAKE_ZH.name(),
-            "ctitle": lambda a: FAKE_ZH.sentence(nb_words=random.randint(3, 8)).rstrip("。"),
-            "cparagraph": lambda a: FAKE_ZH.paragraph(),
-            "csentence": lambda a: FAKE_ZH.sentence(),
-            "cword": lambda a: FAKE_ZH.word(),
             "name": lambda a: FAKE_EN.name(),
-            "title": lambda a: FAKE_EN.sentence(nb_words=random.randint(3, 8)).rstrip("."),
-            "word": lambda a: FAKE_EN.word(),
-            "sentence": lambda a: FAKE_EN.sentence(),
-            "paragraph": lambda a: FAKE_EN.paragraph(),
             "email": lambda a: FAKE_EN.email(),
+            "phone": lambda a: FAKE_ZH.phone_number(),
+            "mobile": lambda a: FAKE_ZH.phone_number(),
+            # text (length-aware: @ctitle(min,max) / @ctitle(min-max) / @ctitle(n))
+            "cword": lambda a: self._cjk(a, lambda: FAKE_ZH.word()),
+            "ctitle": lambda a: self._cjk(a, lambda: FAKE_ZH.sentence(nb_words=random.randint(3, 8)).rstrip("。")),
+            "csentence": lambda a: self._cjk(a, lambda: FAKE_ZH.sentence()),
+            "cparagraph": lambda a: self._cjk(a, lambda: FAKE_ZH.paragraph()),
+            "word": lambda a: self._en(a, lambda: FAKE_EN.word()),
+            "title": lambda a: self._en(a, lambda: FAKE_EN.sentence(nb_words=random.randint(3, 8)).rstrip(".")),
+            "sentence": lambda a: self._en(a, lambda: FAKE_EN.sentence()),
+            "paragraph": lambda a: self._en(a, lambda: FAKE_EN.paragraph()),
+            # network
             "url": lambda a: FAKE_EN.url(),
             "domain": lambda a: FAKE_EN.domain_name(),
             "ip": lambda a: FAKE_EN.ipv4(),
-            "phone": lambda a: FAKE_ZH.phone_number(),
+            # geo
             "province": lambda a: FAKE_ZH.province(),
             "city": lambda a: FAKE_ZH.city(),
-            "county": lambda a: FAKE_ZH.city(),
+            "county": lambda a: FAKE_ZH.district(),
+            "address": lambda a: FAKE_ZH.address(),
+            # time
             "date": self._date, "time": self._time, "datetime": self._datetime, "now": self._now,
             "image": self._image,
         }
         self._counters: Dict[str, itertools.count] = {}
 
-    def _integer(self, a): return random.randint(int(a[0]) if a else 0, int(a[1]) if len(a) > 1 else 100)
+    # ---- argument parsing -------------------------------------------------
+    @staticmethod
+    def _parse_num(tok):
+        tok = str(tok).strip()
+        try:
+            return int(tok)
+        except ValueError:
+            return float(tok)
+
+    @staticmethod
+    def _is_range(tok):
+        return "-" in str(tok).strip()[1:]
+
+    @classmethod
+    def _bounds(cls, args, dlo, dhi):
+        """Resolve (lo, hi) from placeholder args.
+
+        Accepts both MockJS range syntax and the comma form:
+        ('1-100',) -> (1, 100) | ('1', '100') -> (1, 100) | ('5',) -> (5, 5)
+        """
+        if not args:
+            return dlo, dhi
+        try:
+            if len(args) == 1:
+                tok = args[0].strip()
+                if "-" in tok[1:]:
+                    a, b = tok.split("-", 1)
+                    x, y = cls._parse_num(a), cls._parse_num(b)
+                else:
+                    x = y = cls._parse_num(tok)
+            else:
+                x, y = cls._parse_num(args[0]), cls._parse_num(args[1])
+        except (ValueError, TypeError):
+            return dlo, dhi
+        return (min(x, y), max(x, y))
+
+    @classmethod
+    def _length_of(cls, args):
+        """Character count for text placeholders, or None when no args were given."""
+        if not args:
+            return None
+        lo, hi = cls._bounds(args[:2], 1, 1)
+        return max(1, int(random.randint(int(lo), int(hi))))
+
+    @classmethod
+    def _cjk(cls, args, source):
+        n = cls._length_of(args)
+        if n is None:
+            return source()
+        text = ""
+        while len(text) < n:
+            text += source()
+        return text[:n]
+
+    @classmethod
+    def _en(cls, args, source):
+        n = cls._length_of(args)
+        if n is None:
+            return source()
+        text = ""
+        while len(text) < n:
+            text += (" " if text else "") + source()
+        return text[:n]
+
+    # ---- number placeholders ---------------------------------------------
+    def _integer(self, a):
+        lo, hi = self._bounds(a, 0, 100)
+        return random.randint(int(lo), int(hi))
     def _float(self, a):
-        mn, mx = float(a[0]) if a else 0.0, float(a[1]) if len(a) > 1 else 100.0
-        return round(random.uniform(mn, mx), int(a[2]) if len(a) > 2 else 2)
+        # Forms: (min-max) | (min,max) | (min-max, dmin-dmax) | (min,max,dmin,dmax)
+        if not a:
+            lo, hi, dargs = 0.0, 100.0, []
+        elif self._is_range(a[0]):
+            lo, hi = self._bounds(a[:1], 0.0, 100.0)
+            dargs = a[1:3]
+        else:
+            lo, hi = self._bounds(a[:2], 0.0, 100.0)
+            dargs = a[2:4]
+        dlo, dhi = self._bounds(dargs, 2, 2)
+        return round(random.uniform(float(lo), float(hi)),
+                     max(0, int(random.randint(int(dlo), int(dhi)))))
     def _boolean(self, a): return random.choice([True, False])
-    def _string(self, a): return ''.join(random.choices('abcdefghijklmnopqrstuvwxyz', k=int(a[0]) if a else 10))
+    def _string(self, a):
+        lo, hi = self._bounds(a, 10, 10)
+        return ''.join(random.choices('abcdefghijklmnopqrstuvwxyz',
+                                      k=max(0, int(random.randint(int(lo), int(hi))))))
     def _uuid(self, a): return str(uuid.uuid4())
-    def _id(self, a): return str(uuid.uuid4())
-    def _natural(self, a): return random.randint(max(0, int(a[0]) if a else 0), int(a[1]) if len(a) > 1 else 9999)
+    def _id(self, a):
+        try: return FAKE_ZH.ssn()
+        except Exception: return ''.join(random.choices('0123456789', k=18))
+    def _natural(self, a):
+        lo, hi = self._bounds(a, 0, 9999)
+        return random.randint(max(0, int(lo)), max(0, int(hi)))
     def _pick(self, a): return random.choice(a) if a else ""
+    def _color(self, a): return FAKE_ZH.color()
+
+    # ---- date/time placeholders ------------------------------------------
+    MOCKJS_TIME_TOKENS = (("yyyy", "%Y"), ("yy", "%y"), ("MM", "%m"), ("dd", "%d"),
+                          ("HH", "%H"), ("hh", "%I"), ("mm", "%M"), ("ss", "%S"))
+
+    @classmethod
+    def _fmt(cls, a, default):
+        """Accept strftime formats and MockJS-style tokens such as yyyy-MM-dd."""
+        f = (a[0] if a and a[0] else default)
+        if "%" not in f:
+            for token, directive in cls.MOCKJS_TIME_TOKENS:
+                f = f.replace(token, directive)
+        return f
+
     def _date(self, a):
-        return (datetime.now() - timedelta(days=random.randint(0, 3650))).strftime(a[0] if a else "%Y-%m-%d")
-    def _time(self, a): return datetime(2000,1,1,random.randint(0,23),random.randint(0,59),random.randint(0,59)).strftime(a[0] if a else "%H:%M:%S")
+        return (datetime.now() - timedelta(days=random.randint(0, 3650))).strftime(self._fmt(a, "%Y-%m-%d"))
+    def _time(self, a):
+        return datetime(2000, 1, 1, random.randint(0, 23), random.randint(0, 59),
+                        random.randint(0, 59)).strftime(self._fmt(a, "%H:%M:%S"))
     def _datetime(self, a):
-        return (datetime.now() - timedelta(days=random.randint(0,3650),hours=random.randint(0,23),minutes=random.randint(0,59))).strftime(a[0] if a else "%Y-%m-%d %H:%M:%S")
-    def _now(self, a): return datetime.now().strftime(a[0] if a else "%Y-%m-%d %H:%M:%S")
+        return (datetime.now() - timedelta(days=random.randint(0, 3650), hours=random.randint(0, 23),
+                                           minutes=random.randint(0, 59))).strftime(self._fmt(a, "%Y-%m-%d %H:%M:%S"))
+    def _now(self, a): return datetime.now().strftime(self._fmt(a, "%Y-%m-%d %H:%M:%S"))
     def _image(self, a):
         w, h = 200, 200
         if a and "x" in a[0]:
@@ -200,15 +310,20 @@ class MockJSEngine:
             parts = rule.split("-", 1)
             try:
                 mn, mx = int(parts[0]), int(parts[1])
-                if isinstance(value, str): return ''.join(random.choices(value, k=random.randint(mn, mx)))
-                return random.randint(mn, mx)
-            except ValueError: pass
+            except ValueError:
+                return self.render(value, fk)
+            lo, hi = min(mn, mx), max(mn, mx)
+            if isinstance(value, str): return str(self._render_string(value)) * random.randint(lo, hi)
+            if isinstance(value, list):
+                return [self.render(copy.deepcopy(value[i % len(value)]), fk)
+                        for i in range(random.randint(lo, hi))]
+            return random.randint(lo, hi)
         try:
             n = int(rule)
             if isinstance(value, list):
                 if n == 1 and value: return self.render(random.choice(value), fk)
                 return [self.render(copy.deepcopy(value[i % len(value)]), fk) for i in range(n)]
-            if isinstance(value, str): return self._render_string(value) * n
+            if isinstance(value, str): return str(self._render_string(value)) * n
             return self.render(value, fk)
         except ValueError: pass
         return self.render(value, fk)
@@ -216,6 +331,13 @@ class MockJSEngine:
     def _render_list(self, lst, prefix): return [self.render(item, f"{prefix}[{i}]") for i, item in enumerate(lst)]
 
     def _render_string(self, s):
+        # A value that is exactly one placeholder keeps its native type, so
+        # @boolean stays a real JSON boolean instead of the string "True".
+        whole = self.PLACEHOLDER_RE.fullmatch(s)
+        if whole:
+            handler = self._handlers.get(whole.group(1))
+            if handler:
+                return handler([a.strip() for a in whole.group(2).split(",")] if whole.group(2) else [])
         def replacer(m):
             name, args = m.group(1), [a.strip() for a in m.group(2).split(",")] if m.group(2) else []
             h = self._handlers.get(name)
@@ -574,8 +696,8 @@ class RouteManager:
             else:
                 idx = self._seq_counters.get(key,0) % len(responses)
                 self._seq_counters[key] = idx + 1; sel = responses[idx]
-            # Render
-            self.mockjs.reset_counters()
+            # Render. Counters are intentionally NOT reset per request, so
+            # "id|+1" keeps advancing across calls (1, 2, 3, ...).
             body = self.mockjs.render(sel.get("body",{}))
             delay = sel.get("delay",0)
             if delay > 0: await asyncio.sleep(delay/1000.0)
@@ -1442,7 +1564,7 @@ const _JE = {
   setup(props, { emit }) {
     let cm = null;
     const el = ref(null);
-    const KW = ['cname','ctitle','cparagraph','csentence','cword','name','title','word','sentence','paragraph','email','url','domain','ip','phone','province','city','county','date','time','datetime','now','image','integer','float','boolean','string','uuid','id','natural','pick'];
+    const KW = ['cname','ctitle','cparagraph','csentence','cword','name','title','word','sentence','paragraph','email','url','domain','ip','phone','mobile','province','city','county','address','date','time','datetime','now','image','color','integer','float','boolean','string','uuid','guid','id','natural','pick'];
     function mockHint(e2) {
       const cur = e2.getCursor();
       const before = e2.getLine(cur.line).slice(0, cur.ch);
