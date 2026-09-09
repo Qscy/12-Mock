@@ -249,6 +249,8 @@ mock_data/
 | 3 | 302 跳转镜像 | 服务端下载失败时，让浏览器直接访问镜像 |
 
 - Tailwind CSS **不使用 CDN**：它的样式在构建期按本文件的模板预编译后内联进 `12_mock.py`，运行时不做任何 CSS 编译。
+- **Vue 运行时在已缓存时直接内联进页面**，不再是一次单独的请求；即使浏览器缓存/插件/代理拦截了某个资源 URL，界面也不会白屏。页面还带有一次带唯一参数的重试作为兜底。
+- 排查工具：`GET /_admin/diag` 是一个纯 ES5 的浏览器自检页，会列出每个资源的 HTTP 状态、MIME、字节数、语法检查结果，以及动态加载 Vue 是否成功。
 - 离线部署：把下列文件放进 `<脚本同级>/vendor/` 即可，无需联网：
   `vue.global.prod.js`、`codemirror.js`、`codemirror.css`、`codemirror.closebrackets.js`、
   `codemirror.matchbrackets.js`、`codemirror.foldcode.js`、`codemirror.foldgutter.js`、

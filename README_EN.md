@@ -251,6 +251,8 @@ The management UI needs Vue 3 and CodeMirror 5. Every asset tag in the page poin
 | 3 | 302 to a mirror | If the server cannot fetch it, the browser is redirected to a mirror |
 
 - Tailwind CSS is **never fetched from a CDN**: it is compiled at build time from this file's own template and inlined into `12_mock.py`, so no CSS is compiled in the browser at runtime.
+- **The Vue runtime is inlined into the page when it is cached**, so it is no longer a separate request: a blocked or stale asset URL cannot blank the UI. A one-shot retry with a unique URL remains as a fallback.
+- Diagnostic: `GET /_admin/diag` is an ES5-only self-test page listing each asset's HTTP status, MIME type, byte size, syntax-check result, and whether a dynamically loaded Vue actually appears.
 - Offline install: drop these files into `<script dir>/vendor/` and no network is needed —
   `vue.global.prod.js`, `codemirror.js`, `codemirror.css`, `codemirror.closebrackets.js`,
   `codemirror.matchbrackets.js`, `codemirror.foldcode.js`, `codemirror.foldgutter.js`,
