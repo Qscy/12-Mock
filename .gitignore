@@ -19,3 +19,4 @@ Thumbs.db
 
 # Local helper scripts (regression tests, Tailwind build), not part of the project
 tools/
+.dsh-meow/
