@@ -903,6 +903,19 @@ def create_management_api(app, storage, mockjs, logger, auth_mgr, jwt_managers, 
     async def auth_logout(ctx: dict = Depends(require_auth)):
         return {"message": "Logged out"}
 
+    @app.put("/_admin/auth/password")
+    async def change_own_password(body: dict, ctx: dict = Depends(require_auth)):
+        """Every logged-in user may change their OWN password; other users'
+        passwords stay admin-only (PUT /_admin/auth/users/{username}/password)."""
+        if not auth_mgr.enabled: raise HTTPException(400, "Auth is not enabled")
+        if ctx["operator"] in ("anonymous", "setup"): raise HTTPException(401, "Login required")
+        new_pw = body.get("new_password") if isinstance(body, dict) else None
+        if not new_pw: raise HTTPException(400, "new_password is required")
+        project = _ap()
+        auth_mgr.update_password(ctx["operator"], new_pw)
+        logger.log_auth_user_changed(project, ctx["operator"], ctx["ip"], "update_password", ctx["operator"])
+        return {"message": "Password updated"}
+
     # ---- User management (admin only) ----
     @app.get("/_admin/auth/users")
     async def list_users(ctx: dict = Depends(require_admin)):
@@ -1054,7 +1067,7 @@ def create_management_api(app, storage, mockjs, logger, auth_mgr, jwt_managers, 
         return {"message":"Route updated"}
 
     @app.delete("/_admin/projects/{name}/routes")
-    async def delete_route(name: str, body: dict, ctx: dict = Depends(require_auth)):
+    async def delete_route(name: str, body: dict, ctx: dict = Depends(require_admin)):
         path, method = body.get("path","/"), body.get("method","GET").lower()
         oa = storage.get_openapi(name)
         pi = oa.get("paths",{}).get(path,{})
