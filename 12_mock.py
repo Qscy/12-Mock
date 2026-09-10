@@ -1461,7 +1461,7 @@ def render_diag(assets: AssetManager) -> str:
     return DIAG_HTML.replace("/*ASSET_JSON*/", json.dumps(urls, ensure_ascii=False))
 
 
-TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.static{position:static}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.inline{display:inline}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
+TAILWIND_CSS = r"""*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{box-sizing:border-box;border:0 solid #e5e7eb}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;-o-tab-size:4;tab-size:4;font-family:ui-sans-serif,system-ui,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{opacity:1;color:#9ca3af}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.static{position:static}.fixed{position:fixed}.inset-0{inset:0}.z-50{z-index:50}.z-\[60\]{z-index:60}.my-2{margin-top:.5rem;margin-bottom:.5rem}.mb-1{margin-bottom:.25rem}.mb-2{margin-bottom:.5rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}.ml-1{margin-left:.25rem}.mr-1{margin-right:.25rem}.mt-1{margin-top:.25rem}.mt-4{margin-top:1rem}.block{display:block}.inline{display:inline}.flex{display:flex}.table{display:table}.hidden{display:none}.h-11{height:2.75rem}.h-52{height:13rem}.max-h-\[80vh\]{max-height:80vh}.max-h-\[85vh\]{max-height:85vh}.min-h-screen{min-height:100vh}.w-20{width:5rem}.w-24{width:6rem}.w-28{width:7rem}.w-32{width:8rem}.w-44{width:11rem}.w-56{width:14rem}.w-72{width:18rem}.w-80{width:20rem}.w-96{width:24rem}.w-\[480px\]{width:480px}.w-\[680px\]{width:680px}.w-full{width:100%}.flex-1{flex:1 1 0%}.flex-col{flex-direction:column}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:.25rem}.gap-2{gap:.5rem}.gap-3{gap:.75rem}.space-y-0\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.125rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.125rem*var(--tw-space-y-reverse))}.space-y-2>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.5rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.5rem*var(--tw-space-y-reverse))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)));margin-bottom:calc(.75rem*var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.break-all{word-break:break-all}.rounded{border-radius:.25rem}.border-b{border-bottom-width:1px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-gray-50{--tw-border-opacity:1;border-color:rgb(249 250 251/var(--tw-border-opacity,1))}.bg-black\/30{background-color:rgba(0,0,0,.3)}.bg-blue-100{--tw-bg-opacity:1;background-color:rgb(219 234 254/var(--tw-bg-opacity,1))}.bg-gray-50{--tw-bg-opacity:1;background-color:rgb(249 250 251/var(--tw-bg-opacity,1))}.bg-purple-100{--tw-bg-opacity:1;background-color:rgb(243 232 255/var(--tw-bg-opacity,1))}.bg-red-100{--tw-bg-opacity:1;background-color:rgb(254 226 226/var(--tw-bg-opacity,1))}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255/var(--tw-bg-opacity,1))}.p-1{padding:.25rem}.p-2{padding:.5rem}.p-3{padding:.75rem}.p-4{padding:1rem}.p-6{padding:1.5rem}.p-8{padding:2rem}.px-1{padding-left:.25rem;padding-right:.25rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-1{padding-top:.25rem;padding-bottom:.25rem}.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}.py-2{padding-top:.5rem;padding-bottom:.5rem}.py-6{padding-top:1.5rem;padding-bottom:1.5rem}.pb-1{padding-bottom:.25rem}.text-left{text-align:left}.text-center{text-align:center}.text-right{text-align:right}.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-semibold{font-weight:600}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11/var(--tw-text-opacity,1))}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246/var(--tw-text-opacity,1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235/var(--tw-text-opacity,1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216/var(--tw-text-opacity,1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175/var(--tw-text-opacity,1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128/var(--tw-text-opacity,1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}.text-green-600{--tw-text-opacity:1;color:rgb(22 163 74/var(--tw-text-opacity,1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206/var(--tw-text-opacity,1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68/var(--tw-text-opacity,1))}.text-red-600{--tw-text-opacity:1;color:rgb(220 38 38/var(--tw-text-opacity,1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28/var(--tw-text-opacity,1))}.filter{filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.ease-out{transition-timing-function:cubic-bezier(0,0,.2,1)}.hover\:text-gray-600:hover{--tw-text-opacity:1;color:rgb(75 85 99/var(--tw-text-opacity,1))}"""
 
 FRONTEND_HTML = r'''<!DOCTYPE html>
 <html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -1505,6 +1505,10 @@ ta.ipt{resize:vertical;min-height:100px;font-family:Consolas,monospace}
 .toast-item{background:#111827;color:#fff;padding:7px 12px;border-radius:6px;font-size:12px;box-shadow:0 6px 18px rgba(15,23,42,.18);max-width:320px;animation:toastin .18s ease-out}
 .toast-item.ok{background:#16a34a}.toast-item.err{background:#dc2626}
 @keyframes toastin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+/* Help button popover: shown for 10s on every app open, anchored under the button. */
+.help-wrap{position:relative}
+.help-tip{position:absolute;top:calc(100% + 10px);right:4px;z-index:9999;width:250px;background:#111827;color:#fff;padding:9px 12px;border-radius:8px;font-size:12px;line-height:1.6;font-weight:400;box-shadow:0 8px 22px rgba(15,23,42,.28);animation:toastin .18s ease-out;text-align:left;white-space:normal}
+.help-tip::after{content:'';position:absolute;top:-5px;right:10px;width:10px;height:10px;background:#111827;transform:rotate(45deg)}
 </style>
 <!--TAILWIND_STYLE--></head><body>
 <noscript><div style="padding:24px;font-family:system-ui,sans-serif;font-size:13px">This admin UI requires JavaScript.</div></noscript>
@@ -1557,12 +1561,18 @@ Vue 3 未能加载，管理界面无法启动。<br>
 </div>
 <div class="flex items-center gap-2 text-xs">
 <button class="btn bo" @click="showLog=!showLog">{{t('logs')}}</button>
+<button class="btn bo" @click="openApiConsole">{{t('apiConsole')}}</button>
 <button class="btn bo" @click="toggleJwt">JWT</button>
-<button class="btn bo" @click="toggleSettings">⚙ {{t('settings')}}</button>
+<button v-if="isSvcAdmin" class="btn bo" @click="toggleSettings">⚙ {{t('settings')}}</button>
 <button v-if="isAdmin" class="btn bo" :disabled="pending.users" @click="run('users',openUsers)">{{t('users')}}</button>
+<button v-if="authOn" class="btn bo" @click="openChgOwn">{{t('chgOwnPw')}}</button>
 <button class="text-xs text-gray-400 hover:text-gray-600 px-1" @click="toggleLang">{{langToggle}}</button>
 <span v-if="authOn" class="text-gray-400">{{cu}}<span v-if="isAdmin" class="text-blue-500 ml-1">[Admin]</span></span>
 <button v-if="authOn" class="btn bo" @click="logout">{{t('logout')}}</button>
+<div class="help-wrap">
+<button class="btn bo" @click="openHelp">? {{t('help')}}</button>
+<div v-if="showHelpTip" class="help-tip">{{t('helpTip')}}</div>
+</div>
 </div></header>
 <div class="flex flex-1 overflow-hidden">
 <!-- Sidebar -->
@@ -1582,10 +1592,11 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <div class="p-3 border-b bg-white flex items-center gap-2">
 <select class="ipt w-24 text-xs font-bold" v-model="ef.method">
 <option v-for="m in methods" :value="m">{{m}}</option></select>
+<span class="host-badge">{{projectHost}}</span>
 <input class="ipt flex-1 text-xs font-mono" v-model="ef.path">
 <button class="btn bp" :disabled="pending.send" @click="run('send',sendReq)">Send</button>
 <button class="btn bo" :disabled="pending.save" @click="run('save',saveRoute)">{{t('save')}}</button>
-<button class="btn bd text-xs" :disabled="pending.del" @click="run('del',delRoute)">{{t('delete')}}</button></div>
+<button class="btn bd text-xs" :disabled="pending.del||!isSvcAdmin" :title="isSvcAdmin?'':t('adminOnly')" @click="run('del',delRoute)">{{t('delete')}}</button></div>
 <div class="flex border-b bg-white">
 <div class="tab" :class="{act:mt==='resp'}" @click="mt='resp'">{{t('responses')}}</div>
 <div class="tab" :class="{act:mt==='intc'}" @click="mt='intc'">{{t('intercept')}}</div>
@@ -1684,6 +1695,39 @@ Vue 3 未能加载，管理界面无法启动。<br>
 <button class="btn bo w-full" :disabled="pending.jwtVerify" @click="run('jwtVerify',verifyJwt)">{{t('verify')}}</button>
 <div v-if="jwt.vresult" class="text-xs" :class="jwt.vresult.valid?'text-green-600':'text-red-600'">{{JSON.stringify(jwt.vresult)}}</div>
 </div></div>
+<!-- API Console Dialog: every management endpoint from the README, callable in place.
+     View endpoints for everyone; DELETE + service config rows need an admin. -->
+<div v-if="showApi" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showApi=false">
+<div class="card p-4 w-[680px] max-h-[85vh] overflow-y-auto space-y-2">
+<h3 class="font-bold text-sm">{{t('apiConsole')}}</h3>
+<div class="text-xs text-gray-400">{{t('consoleHint')}} <span class="font-mono">{{ap}}</span></div>
+<div v-for="row in API_LIST" :key="row.m+row.p" class="border-b border-gray-50 pb-1">
+<div class="flex items-center gap-2 text-xs">
+<span class="mb" :class="'m'+row.m[0].toLowerCase()">{{row.m}}</span>
+<input v-if="row.p.includes('{')" class="ipt flex-1 font-mono" v-model="apiPath[row.p]">
+<span v-else class="font-mono flex-1 truncate">{{row.p}}</span>
+<span class="text-gray-400">{{td(row)}}</span>
+<span v-if="row.adm&&!isSvcAdmin" class="text-amber-500">{{t('adminOnly')}}</span>
+<button class="btn bp" :disabled="(row.adm&&!isSvcAdmin)||pending['api'+row.m+row.p]" @click="run('api'+row.m+row.p,()=>callApi(row))">{{t('invoke')}}</button>
+</div>
+<textarea v-if="row.body!=null" class="ipt text-xs font-mono mt-1" rows="2" spellcheck="false" v-model="apiBody[row.p]"></textarea>
+</div>
+<div v-if="apiRes" id="api-result" class="card p-2 text-xs">
+<div class="flex items-center gap-2 mb-1">
+<span :class="apiRes.ok?'text-green-600':'text-red-600'">{{apiRes.method}} {{apiRes.status}}</span>
+<span class="text-gray-400">{{apiRes.time}}ms</span>
+<span class="font-mono text-gray-400 truncate flex-1">{{apiRes.path}}</span></div>
+<textarea readonly class="w-full text-xs font-mono" rows="8" :value="apiRes.body"></textarea></div>
+<div><button class="btn bo" @click="showApi=false">{{t('close')}}</button></div>
+</div></div>
+<!-- Change Own Password Dialog (any logged-in user) -->
+<div v-if="showChgOwn" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showChgOwn=false">
+<div class="card p-6 w-80 space-y-3"><h3 class="font-bold text-sm">{{t('chgOwnPw')}}</h3>
+<input class="ipt" type="password" v-model="pwOwn.p1" :placeholder="t('newPw')" @keyup.enter="doChgOwn">
+<input class="ipt" type="password" v-model="pwOwn.p2" :placeholder="t('confirmPw')" @keyup.enter="doChgOwn">
+<div v-if="pwOwn.e" class="text-red-500 text-xs">{{pwOwn.e}}</div>
+<div class="flex gap-2"><button class="btn bp flex-1" :disabled="pending.chgOwn" @click="run('chgOwn',doChgOwn)">{{t('save')}}</button>
+<button class="btn bo flex-1" @click="showChgOwn=false">{{t('cancel')}}</button></div></div></div>
 <!-- Add Route Dialog -->
 <div v-if="showAdd" class="fixed inset-0 bg-black/30 flex items-center justify-center z-50" @click.self="showAdd=false">
 <div class="card p-6 w-80 space-y-3"><h3 class="font-bold text-sm">{{t('addRoute')}}</h3>
@@ -1853,7 +1897,9 @@ chgPw:'改密码',addUser:'添加用户',setAdmin:'设为管理员',newPw:'新�
 settings:'设置',enableAuth:'启用认证',sessionExpire:'会话有效期（分钟）',close:'关闭',
 setupAdmin:'初始化管理员',setupAdminHint:'首次启用认证且尚无管理员，请创建管理员账号',confirmPw:'确认密码',createAdmin:'创建管理员',
 testToken:'测试 Token（可选，JWT 保护路由用）',useIssued:'使用已签发',testBody:'请求体（可选，JSON）',
-saved:'已保存',deleted:'已删除',added:'已添加',created:'已创建',refreshed:'已刷新',issued:'已签发',reqFailed:'请求失败'},
+saved:'已保存',deleted:'已删除',added:'已添加',created:'已创建',refreshed:'已刷新',issued:'已签发',reqFailed:'请求失败',
+apiConsole:'管理接口',invoke:'调用',adminOnly:'仅管理员',chgOwnPw:'修改密码',consoleHint:'{name} 会替换为当前项目，路径可直接编辑后调用',apiBadBody:'请求体不是有效 JSON',
+help:'使用帮助',helpTip:'这是「使用帮助」按钮：点击后会在浏览器新标签页打开帮助文档（README）'},
 en:{username:'Username',password:'Password',login:'Login',logout:'Logout',project:'Project',logs:'Logs',users:'Users',
 search:'Search...',noRoutes:'No routes',addRoute:'Add Route',save:'Save',delete:'Delete',responses:'Responses',
 intercept:'Intercept',redirect:'Redirect',test:'Test',sequential:'Sequential',random:'Random',protected:'Protected',
@@ -1866,7 +1912,9 @@ chgPw:'Password',addUser:'Add User',setAdmin:'Set as Admin',newPw:'New Password'
 settings:'Settings',enableAuth:'Enable Authentication',sessionExpire:'Session Expire (minutes)',close:'Close',
 setupAdmin:'Create Admin',setupAdminHint:'Auth was just enabled and no admin exists yet — create the first admin account',confirmPw:'Confirm Password',createAdmin:'Create Admin',
 testToken:'Test Token (optional, for JWT-protected routes)',useIssued:'Use Issued',testBody:'Request body (optional, JSON)',
-saved:'Saved',deleted:'Deleted',added:'Added',created:'Created',refreshed:'Refreshed',issued:'Issued',reqFailed:'Request failed'}};
+saved:'Saved',deleted:'Deleted',added:'Added',created:'Created',refreshed:'Refreshed',issued:'Issued',reqFailed:'Request failed',
+apiConsole:'API Console',invoke:'Invoke',adminOnly:'Admin only',chgOwnPw:'Change Password',consoleHint:'{name} becomes the active project; paths are editable before invoking',apiBadBody:'Body is not valid JSON',
+help:'Help',helpTip:'This is the Help button: clicking it opens the help docs (README) in a new browser tab'}};
 const _app=createApp({setup(){
 const lang=ref(localStorage.getItem('mock_lang')||'zh');
 function t(k){return I18N[lang.value]?.[k]||I18N.zh[k]||k}
@@ -1888,7 +1936,58 @@ const showChgPw=ref(false),chgPwUser=ref(''),chgPwNew=ref('');
 const showSettings=ref(false),showSetup=ref(false);
 const cfg=reactive({enabled:false,sessionExpire:480,msg:'',ok:false});
 const sf=reactive({u:'',p:'',p2:'',e:''});
-const projectHost=computed(()=>{const p=projects.value.find(x=>x.name===ap.value);return p&&p.port?'localhost:'+p.port:'localhost'});
+// Permission model: with auth enabled, viewing + all create/update writes are for
+// every logged-in user; DELETEs and service config (auth settings, user
+// management) are admin-only. With auth disabled everything is allowed.
+const isSvcAdmin=computed(()=>!authOn.value||isAdmin.value);
+// API console: the README management table as invocable rows. {name} pre-fills
+// with the active project, {username} with the current user; both are editable.
+const showApi=ref(false);
+const apiBody=reactive({});
+const apiPath=reactive({});
+const apiRes=ref(null);
+const showChgOwn=ref(false);
+const pwOwn=reactive({p1:'',p2:'',e:''});
+// Help button: "?" opens the README in a new browser tab. The popover tip is
+// shown for 10s on every app open (login screen, single-user mode, re-login)
+// so users always discover it; clicking the button dismisses it early.
+const HELP_URL='https://gitee.com/qscy2023/12-Mock/blob/main/README.md';
+const showHelpTip=ref(false);let helpTipTimer=null;
+function startHelpTip(){if(helpTipTimer)return;showHelpTip.value=true;
+helpTipTimer=setTimeout(()=>{showHelpTip.value=false;helpTipTimer=null},10000)}
+function openHelp(){showHelpTip.value=false;
+if(helpTipTimer){clearTimeout(helpTipTimer);helpTipTimer=null}
+window.open(HELP_URL,'_blank','noopener')}
+const API_LIST=[
+{m:'GET',p:'/_admin/auth/status',d:{zh:'获取认证状态',en:'Get auth status'}},
+{m:'POST',p:'/_admin/auth/login',d:{zh:'登录获取 token',en:'Login and get token'},body:'{"username":"","password":""}'},
+{m:'POST',p:'/_admin/auth/logout',d:{zh:'登出',en:'Logout'}},
+{m:'PUT',p:'/_admin/auth/password',d:{zh:'修改自己的密码',en:'Change own password'},body:'{"new_password":""}'},
+{m:'GET',p:'/_admin/auth/users',d:{zh:'用户列表',en:'List users'},adm:1},
+{m:'POST',p:'/_admin/auth/users',d:{zh:'添加用户',en:'Add user'},adm:1,body:'{"username":"","password":"","is_admin":false}'},
+{m:'PUT',p:'/_admin/auth/users/{username}/password',d:{zh:'修改用户密码',en:"Change user's password"},adm:1,body:'{"new_password":""}'},
+{m:'DELETE',p:'/_admin/auth/users/{username}',d:{zh:'删除用户',en:'Delete user'},adm:1},
+{m:'PUT',p:'/_admin/auth/config',d:{zh:'更新认证配置',en:'Update auth config'},adm:1,body:'{"enabled":true}'},
+{m:'GET',p:'/_admin/projects',d:{zh:'项目列表',en:'List projects'}},
+{m:'POST',p:'/_admin/projects',d:{zh:'创建项目',en:'Create project'},body:'{"name":"new-project"}'},
+{m:'DELETE',p:'/_admin/projects/{name}',d:{zh:'删除项目（含级联审计）',en:'Delete project (cascade audit)'},adm:1},
+{m:'POST',p:'/_admin/projects/{name}/activate',d:{zh:'激活项目',en:'Activate project'}},
+{m:'GET',p:'/_admin/projects/{name}/openapi',d:{zh:'获取 OpenAPI 定义',en:'Get OpenAPI definition'}},
+{m:'PUT',p:'/_admin/projects/{name}/openapi',d:{zh:'更新 OpenAPI 定义',en:'Update OpenAPI definition'},body:'{}'},
+{m:'POST',p:'/_admin/projects/{name}/openapi/import',d:{zh:'导入 OpenAPI',en:'Import OpenAPI'},body:'{"openapi":"3.0.3","info":{"title":"imported","version":"1.0.0"},"paths":{}}'},
+{m:'GET',p:'/_admin/projects/{name}/openapi/export',d:{zh:'导出 OpenAPI',en:'Export OpenAPI'}},
+{m:'GET',p:'/_admin/projects/{name}/routes',d:{zh:'路由列表',en:'List routes'}},
+{m:'POST',p:'/_admin/projects/{name}/routes',d:{zh:'添加路由',en:'Add route'},body:'{"path":"/api/example","method":"get","definition":{"responses":[{"name":"default","status":200,"body":{"message":"Hello"},"headers":{},"delay":0}]}}'},
+{m:'PUT',p:'/_admin/projects/{name}/routes',d:{zh:'更新路由',en:'Update route'},body:'{"path":"/api/example","method":"get","definition":{"responses":[{"name":"default","status":200,"body":{"message":"Hello"},"headers":{},"delay":0}]}}'},
+{m:'DELETE',p:'/_admin/projects/{name}/routes',d:{zh:'删除路由（含级联审计）',en:'Delete route (cascade audit)'},adm:1,body:'{"path":"/api/example","method":"get"}'},
+{m:'PUT',p:'/_admin/projects/{name}/intercept',d:{zh:'更新拦截配置',en:'Update intercept'},body:'{"path":"/api/example","method":"get","intercept":{"enabled":true,"status":500,"body":{"error":"blocked"}}}'},
+{m:'GET',p:'/_admin/projects/{name}/logs',d:{zh:'查询审计日志',en:'Query audit logs'}},
+{m:'POST',p:'/_admin/jwt/issue',d:{zh:'签发 JWT Token',en:'Issue JWT token'},body:'{"subject":"test-user","extra_claims":{}}'},
+{m:'POST',p:'/_admin/jwt/verify',d:{zh:'验证 JWT Token',en:'Verify JWT token'},body:'{"token":""}'},
+{m:'GET',p:'/_admin/jwt/config',d:{zh:'获取 JWT 配置',en:'Get JWT config'}},
+{m:'PUT',p:'/_admin/jwt/config',d:{zh:'更新 JWT 配置',en:'Update JWT config'},body:'{"jwt_expire_minutes":30}'},
+{m:'GET',p:'/_admin/assets',d:{zh:'前端资源就绪状态',en:'Asset readiness'}}];
+const projectHost=computed(()=>{const p=projects.value.find(x=>x.name===ap.value);return p&&p.port?location.hostname+':'+p.port:location.host});
 // ---- button feedback: transient toasts + per-action pending flags ----------
 const toasts=ref([]);
 let toastId=0;
@@ -1914,13 +2013,13 @@ catch(e){toast(t('reqFailed')+': '+e.message,'err');return null}
 if(r.status===401&&authOn.value){token.value='';localStorage.removeItem('mock_token');location.reload();return}
 let data=null;
 try{data=await r.json()}catch(e){data=null}
-if(!r.ok&&r.status!==401)toast((data&&data.detail)||('HTTP '+r.status),'err');
+if(!r.ok&&r.status!==401){toast((data&&data.detail)||('HTTP '+r.status),'err');return null}
 return data}
 onMounted(async()=>{
 const s=await fetch('/_admin/auth/status').then(r=>r.json());
 authOn.value=s.enabled;
 cfg.enabled=s.enabled;cfg.sessionExpire=s.session_expire_minutes||480;
-if(!s.enabled||token.value){await loadAll()}
+if(!s.enabled||token.value){await loadAll();startHelpTip()}
 if(s.enabled&&s.needs_setup){showSetup.value=true}
 });
 async function loadAll(){
@@ -1934,7 +2033,7 @@ try{const r=await fetch('/_admin/auth/login',{method:'POST',headers:{'Content-Ty
 body:JSON.stringify({username:lf.u,password:lf.p})});
 const d=await r.json();if(!r.ok){lf.e=d.detail||'Failed';return}
 token.value=d.token;cu.value=d.username;isAdmin.value=!!d.is_admin;localStorage.setItem('mock_token',d.token);
-lf.e='';await loadAll()}catch(e){lf.e=e.message}}
+lf.e='';await loadAll();startHelpTip()}catch(e){lf.e=e.message}}
 function logout(){token.value='';localStorage.removeItem('mock_token');location.reload()}
 // A stored body may be an object (valid JSON) or a raw string (a template that
 // is not valid JSON). Stringifying a string again would show it double-quoted.
@@ -1963,15 +2062,15 @@ return routes.value.filter(r=>!q||r.path.toLowerCase().includes(q)||r.method.toL
 async function saveRoute(){
 const def={...ef.def};def.responses=def.responses.map(r=>{const{_bodyText,...clean}=r;return clean});
 const ic={...def.intercept};try{ic.body=JSON.parse(ic._bodyText)}catch{};delete ic._bodyText;def.intercept=ic;
-await api('/_admin/projects/'+ap.value+'/routes',{method:'PUT',body:JSON.stringify({path:ef.path,method:ef.method.toLowerCase(),definition:def})});
-await loadRoutes();toast(t('saved'))}
+const r=await api('/_admin/projects/'+ap.value+'/routes',{method:'PUT',body:JSON.stringify({path:ef.path,method:ef.method.toLowerCase(),definition:def})});
+if(!r)return;await loadRoutes();toast(t('saved'))}
 async function delRoute(){
 if(!confirm(t('delete')+'?'))return;
-await api('/_admin/projects/'+ap.value+'/routes',{method:'DELETE',body:JSON.stringify({path:sr.value.path,method:sr.value.method.toLowerCase()})});
-sr.value=null;await loadRoutes();toast(t('deleted'))}
+const r=await api('/_admin/projects/'+ap.value+'/routes',{method:'DELETE',body:JSON.stringify({path:sr.value.path,method:sr.value.method.toLowerCase()})});
+if(!r)return;sr.value=null;await loadRoutes();toast(t('deleted'))}
 async function doAddRoute(){
-await api('/_admin/projects/'+ap.value+'/routes',{method:'POST',body:JSON.stringify({path:nf.path,method:nf.method.toLowerCase(),definition:{responses:[{name:'default',status:200,body:{message:'Hello'},headers:{},delay:0}]}})});
-showAdd.value=false;await loadRoutes();toast(t('added'));
+const r=await api('/_admin/projects/'+ap.value+'/routes',{method:'POST',body:JSON.stringify({path:nf.path,method:nf.method.toLowerCase(),definition:{responses:[{name:'default',status:200,body:{message:'Hello'},headers:{},delay:0}]}})});
+if(!r)return;showAdd.value=false;await loadRoutes();toast(t('added'));
 // Auto-select the newly added route so the editor/Test tab target it immediately
 const created=routes.value.find(r=>r.path===nf.path&&r.method.toLowerCase()===nf.method.toLowerCase());
 if(created)selRoute(created);
@@ -1982,7 +2081,7 @@ intercept:{enabled:false,status:500,body:{},_bodyText:'{}'},redirect:{enabled:fa
 mt.value='resp';test.method=nf.method;test.url=nf.path}}
 async function sendReq(){
 if(!test.url){test.result={ok:false,status:'Error',time:0,body:'No route selected'};return}
-const t0=Date.now();const base='http://'+projectHost.value;
+const t0=Date.now();const base=location.protocol+'//'+projectHost.value;
 try{
 const headers={};
 if(test.token&&test.token.trim())headers['Authorization']='Bearer '+test.token.trim();
@@ -1998,18 +2097,19 @@ catch(e){test.result={ok:false,status:'Error',time:Date.now()-t0,body:e.message}
 async function doTest(){await sendReq()}
 async function loadLogs(){
 const r=await api('/_admin/projects/'+ap.value+'/logs?limit=100');
-if(r)logs.value=r.logs;toast(t('refreshed'))}
+if(!r)return;logs.value=r.logs;toast(t('refreshed'))}
 function fmtTs(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleTimeString()}
 function logColor(t2){if(t2==='error')return'bg-red-100 text-red-700';if(t2.startsWith('auth'))return'bg-purple-100 text-purple-700';
 if(t2.includes('delete'))return'bg-red-100 text-red-700';return'bg-blue-100 text-blue-700'}
 async function switchProject(){await loadRoutes();sr.value=null}
 async function doNewProj(){const n=newProjName.value.trim();if(!n)return;
-await api('/_admin/projects',{method:'POST',body:JSON.stringify({name:n})});
-await api('/_admin/projects/'+n+'/activate',{method:'POST'});showNewProj.value=false;newProjName.value='';await loadAll();ap.value=n;toast(t('created'))}
+if(!await api('/_admin/projects',{method:'POST',body:JSON.stringify({name:n})}))return;
+if(!await api('/_admin/projects/'+n+'/activate',{method:'POST'}))return;
+showNewProj.value=false;newProjName.value='';await loadAll();ap.value=n;toast(t('created'))}
 async function issueJwt(){
 try{const ex=JSON.parse(jwt.extra||'{}');
 const r=await api('/_admin/jwt/issue',{method:'POST',body:JSON.stringify({subject:jwt.sub,extra_claims:ex})});
-if(r)jwt.result=r;toast(t('issued'))}catch(e){toast(e.message,'err')}}
+if(r){jwt.result=r;toast(t('issued'))}}catch(e){toast(e.message,'err')}}
 async function verifyJwt(){
 const r=await api('/_admin/jwt/verify',{method:'POST',body:JSON.stringify({token:jwt.verify})});
 if(r)jwt.vresult=r}
@@ -2024,24 +2124,53 @@ const r=await api('/_admin/jwt/config',{method:'PUT',body:JSON.stringify(body)})
 if(r){jwt.cfgMsg=lang.value==='zh'?'配置已保存':'Config saved';jwt.cfgOk=true;jwt.secret='';setTimeout(()=>{jwt.cfgMsg=''},2000)}}
 async function loadUsers(){const r=await api('/_admin/auth/users');if(r)userList.value=r.users||[]}
 async function doAddUser(){if(!nu.username)return;
-await api('/_admin/auth/users',{method:'POST',body:JSON.stringify({username:nu.username,password:nu.password,is_admin:nu.is_admin})});
+if(!await api('/_admin/auth/users',{method:'POST',body:JSON.stringify({username:nu.username,password:nu.password,is_admin:nu.is_admin})}))return;
 nu.username='';nu.password='';nu.is_admin=false;await loadUsers();toast(t('added'))}
 async function doRemoveUser(u){if(!confirm(t('delete')+' '+u+'?'))return;
-await api('/_admin/auth/users/'+u,{method:'DELETE'});await loadUsers();toast(t('deleted'))}
+if(!await api('/_admin/auth/users/'+u,{method:'DELETE'}))return;await loadUsers();toast(t('deleted'))}
 async function doChgPw(){if(!chgPwNew.value)return;
-await api('/_admin/auth/users/'+chgPwUser.value+'/password',{method:'PUT',body:JSON.stringify({new_password:chgPwNew.value})});
+if(!await api('/_admin/auth/users/'+chgPwUser.value+'/password',{method:'PUT',body:JSON.stringify({new_password:chgPwNew.value})}))return;
 showChgPw.value=false;chgPwNew.value='';toast(t('saved'))}
+function td(row){return lang.value==='zh'?row.d.zh:row.d.en}
+function openApiConsole(){showApi.value=true;
+API_LIST.forEach(r=>{if(r.body!=null&&apiBody[r.p]===undefined)apiBody[r.p]=r.body;
+if(r.p.includes('{')&&apiPath[r.p]===undefined)apiPath[r.p]=r.p.replace('{name}',ap.value||'').replace('{username}',cu.value||'')});
+apiRes.value=null}
+async function callApi(row){
+const p=(apiPath[row.p]||row.p).replace('{name}',ap.value||'');
+let payload=null;
+if(row.body!=null){try{payload=JSON.parse(apiBody[row.p]??row.body)}
+catch(e){apiRes.value={method:row.m,path:p,status:'JSON',ok:false,time:0,body:'Body is not valid JSON: '+e.message};
+toast(t('apiBadBody'),'err');return}}
+const t0=Date.now();
+try{
+const init={method:row.m,headers:h()};
+if(row.body!=null){init.headers['Content-Type']='application/json';init.body=JSON.stringify(payload)}
+const r=await fetch(p,init);
+const txt=await r.text();let d;try{d=JSON.parse(txt)}catch(e){d=txt}
+apiRes.value={method:row.m,path:p,status:r.status,ok:r.ok,time:Date.now()-t0,
+body:typeof d==='string'?d:JSON.stringify(d,null,2)};
+toast(row.m+' '+r.status,r.ok?'ok':'err');
+nextTick(()=>document.getElementById('api-result')?.scrollIntoView({behavior:'smooth',block:'nearest'}))}
+catch(e){apiRes.value={method:row.m,path:p,status:'Error',ok:false,time:Date.now()-t0,body:e.message};
+toast(row.m+' Error','err')}}
+function openChgOwn(){pwOwn.p1='';pwOwn.p2='';pwOwn.e='';showChgOwn.value=true}
+async function doChgOwn(){
+if(!pwOwn.p1){pwOwn.e=t('newPw');return}
+if(pwOwn.p1!==pwOwn.p2){pwOwn.e=lang.value==='zh'?'两次密码不一致':'Passwords do not match';return}
+if(!await api('/_admin/auth/password',{method:'PUT',body:JSON.stringify({new_password:pwOwn.p1})}))return;
+showChgOwn.value=false;toast(t('saved'))}
 function toggleSettings(){showSettings.value=!showSettings.value;
 if(showSettings.value){cfg.enabled=authOn.value;cfg.msg=''}}
 async function saveCfg(){
 const body={enabled:cfg.enabled};
 if(cfg.sessionExpire&&cfg.sessionExpire!==480)body.session_expire_minutes=cfg.sessionExpire;
 const r=await api('/_admin/auth/config',{method:'PUT',body:JSON.stringify(body)});
-if(r&&r.detail){cfg.ok=false;cfg.msg=r.detail;cfg.enabled=!cfg.enabled;return}
-if(r){authOn.value=r.enabled;cfg.enabled=r.enabled;cfg.ok=true;
+if(!r){cfg.ok=false;cfg.enabled=!cfg.enabled;return}
+authOn.value=r.enabled;cfg.enabled=r.enabled;cfg.ok=true;
 cfg.msg=lang.value==='zh'?(r.enabled?'已启用认证':'已关闭认证'):(r.enabled?'Authentication enabled':'Authentication disabled');
 if(r.enabled&&r.needs_setup){showSettings.value=false;sf.u='';sf.p='';sf.p2='';sf.e='';showSetup.value=true}
-setTimeout(()=>{cfg.msg=''},2000)}}
+setTimeout(()=>{cfg.msg=''},2000)}
 async function doSetup(){
 if(!sf.u.trim()||!sf.p){sf.e=t('username')+' / '+t('password');return}
 if(sf.p!==sf.p2){sf.e=lang.value==='zh'?'两次密码不一致':'Passwords do not match';return}
@@ -2049,10 +2178,12 @@ try{const r=await fetch('/_admin/auth/setup',{method:'POST',headers:{'Content-Ty
 body:JSON.stringify({username:sf.u.trim(),password:sf.p})});
 const d=await r.json();if(!r.ok){sf.e=d.detail||'Failed';return}
 token.value=d.token;cu.value=d.username;isAdmin.value=true;localStorage.setItem('mock_token',d.token);
-showSetup.value=false;authOn.value=true;sf.u='';sf.p='';sf.p2='';sf.e='';await loadAll()}catch(e){sf.e=e.message}}
-return{token,authOn,cu,isAdmin,ap,projects,routes,sr,ef,mt,sq,showLog,showJwt,showAdd,showNewProj,showUsers,logs,methods,
+showSetup.value=false;authOn.value=true;sf.u='';sf.p='';sf.p2='';sf.e='';await loadAll();startHelpTip()}catch(e){sf.e=e.message}}
+return{token,authOn,cu,isAdmin,isSvcAdmin,ap,projects,routes,sr,ef,mt,sq,showLog,showJwt,showAdd,showNewProj,showUsers,logs,methods,
 lf,test,jwt,jwtSecretVis,nf,fr,newProjName,userList,nu,showChgPw,chgPwUser,chgPwNew,projectHost,lang,langToggle,t,toggleLang,
 toasts,pending,run,openUsers,
+showApi,apiBody,apiPath,apiRes,API_LIST,td,openApiConsole,callApi,showChgOwn,pwOwn,openChgOwn,doChgOwn,
+showHelpTip,openHelp,startHelpTip,
 showSettings,showSetup,cfg,sf,toggleSettings,saveCfg,doSetup,
 login,logout,selRoute,parseBody,addResp,saveRoute,delRoute,doAddRoute,sendReq,doTest,loadLogs,fmtTs,logColor,
 switchProject,doNewProj,issueJwt,verifyJwt,toggleJwt,loadJwtConfig,saveJwtConfig,
