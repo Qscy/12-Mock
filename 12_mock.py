@@ -692,16 +692,28 @@ class RouteManager:
             if rd2.get("enabled"):
                 self.logger.log_request(project,method,path,rd2.get("status",302),int((time.time()-t0)*1000),ip)
                 return RedirectResponse(rd2.get("url","/"), status_code=rd2.get("status",302))
-            # Select response
+            # Select response. A client can pin a specific response body with
+            # the ?response={name} query parameter: exact name match wins over
+            # the sequential/random mode; an unknown name is a 404 that lists
+            # the valid names so the caller can self-correct.
             responses = rd.get("x-mock-responses",[])
             if not responses:
                 self.logger.log_request(project,method,path,404,int((time.time()-t0)*1000),ip)
                 return JSONResponse(status_code=404,content={"error":"No mock responses configured"})
-            mode = rd.get("x-mock-response-mode","sequential")
-            if mode == "random": sel = random.choice(responses)
+            wanted = (request.query_params.get("response") or "").strip()
+            sel = None
+            if wanted:
+                sel = next((r for r in responses if str(r.get("name","")).strip() == wanted), None)
+                if sel is None:
+                    self.logger.log_request(project,method,path,404,int((time.time()-t0)*1000),ip)
+                    return JSONResponse(status_code=404,
+                        content={"error":f"Response '{wanted}' not found","available":[r.get("name") for r in responses]})
             else:
-                idx = self._seq_counters.get(key,0) % len(responses)
-                self._seq_counters[key] = idx + 1; sel = responses[idx]
+                mode = rd.get("x-mock-response-mode","sequential")
+                if mode == "random": sel = random.choice(responses)
+                else:
+                    idx = self._seq_counters.get(key,0) % len(responses)
+                    self._seq_counters[key] = idx + 1; sel = responses[idx]
             # Render. Counters are intentionally NOT reset per request, so
             # "id|+1" keeps advancing across calls (1, 2, 3, ...).
             body = self.mockjs.render(sel.get("body",{}))
