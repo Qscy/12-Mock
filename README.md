@@ -433,3 +433,9 @@ curl -X POST http://localhost:12308/_admin/projects/demo/routes \
 ## License
 
 MIT
+
+## Power By
+
+- qwen3.7-max
+- deepseek-v4[.1]-flash
+- glm5.3-flash
